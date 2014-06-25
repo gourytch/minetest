@@ -22,6 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "irrlichttypes_extrabloated.h"
 #include "activeobject.h"
+#include <map>
 
 /*
 
@@ -54,7 +55,8 @@ public:
 	virtual void updateLight(u8 light_at_pos){}
 	virtual v3s16 getLightPosition(){return v3s16(0,0,0);}
 	virtual core::aabbox3d<f32>* getSelectionBox(){return NULL;}
-	virtual core::aabbox3d<f32>* getCollisionBox(){return NULL;}
+	virtual bool getCollisionBox(aabb3f *toset){return false;}
+	virtual bool collideWithObjects(){return false;}
 	virtual v3f getPosition(){return v3f(0,0,0);}
 	virtual scene::IMeshSceneNode *getMeshSceneNode(){return NULL;}
 	virtual scene::IAnimatedMeshSceneNode *getAnimatedMeshSceneNode(){return NULL;}
@@ -63,6 +65,7 @@ public:
 	virtual bool isLocalPlayer(){return false;}
 	virtual void setAttachments(){}
 	virtual bool doShowSelectionBox(){return true;}
+	virtual void updateCameraOffset(v3s16 camera_offset){};
 	
 	// Step object in time
 	virtual void step(float dtime, ClientEnvironment *env){}
@@ -96,7 +99,7 @@ protected:
 	ClientEnvironment *m_env;
 private:
 	// Used for creating objects based on type
-	static core::map<u16, Factory> m_types;
+	static std::map<u16, Factory> m_types;
 };
 
 struct DistanceSortedActiveObject
@@ -110,7 +113,7 @@ struct DistanceSortedActiveObject
 		d = a_d;
 	}
 
-	bool operator < (DistanceSortedActiveObject &other)
+	bool operator < (const DistanceSortedActiveObject &other) const
 	{
 		return d < other.d;
 	}

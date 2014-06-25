@@ -4,16 +4,16 @@ Copyright (C) 2013 celeron55, Perttu Ahola <celeron55@gmail.com>
 Copyright (C) 2013 Kahrl <kahrl@gmx.net>
 
 This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation; either version 2.1 of the License, or
 (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License along
+You should have received a copy of the GNU Lesser General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
@@ -36,6 +36,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "log.h"
 #include "gamedef.h"
 #include "strfnd.h" // trim()
+#include "tile.h"
 
 /*
 	A cache from shader name to shader path
@@ -125,10 +126,10 @@ public:
 			const std::string &filename)
 	{
 		std::string combined = name_of_shader + DIR_DELIM + filename;
-		core::map<std::string, std::string>::Node *n;
+		std::map<std::string, std::string>::iterator n;
 		n = m_programs.find(combined);
-		if(n)
-			return n->getValue();
+		if(n != m_programs.end())
+			return n->second;
 		return "";
 	}
 	// Primarily fetches from cache, secondarily tries to read from filesystem
@@ -136,10 +137,10 @@ public:
 			const std::string &filename)
 	{
 		std::string combined = name_of_shader + DIR_DELIM + filename;
-		core::map<std::string, std::string>::Node *n;
+		std::map<std::string, std::string>::iterator n;
 		n = m_programs.find(combined);
-		if(n)
-			return n->getValue();
+		if(n != m_programs.end())
+			return n->second;
 		std::string path = getShaderPath(name_of_shader, filename);
 		if(path == ""){
 			infostream<<"SourceShaderCache::getOrLoad(): No path found for \""
@@ -156,7 +157,7 @@ public:
 		return "";
 	}
 private:
-	core::map<std::string, std::string> m_programs;
+	std::map<std::string, std::string> m_programs;
 	std::string readFile(const std::string &path)
 	{
 		std::ifstream is(path.c_str(), std::ios::binary);
@@ -240,12 +241,20 @@ public:
 			services->setVertexShaderConstant(worldViewProj.pointer(), 4, 4);
 
 		// set transposed world matrix
-		core::matrix4 world = driver->getTransform(video::ETS_WORLD);
-		world = world.getTransposed();
+		core::matrix4 transWorld = driver->getTransform(video::ETS_WORLD);
+		transWorld = transWorld.getTransposed();
 		if(is_highlevel)
-			services->setVertexShaderConstant("mTransWorld", world.pointer(), 16);
+			services->setVertexShaderConstant("mTransWorld", transWorld.pointer(), 16);
+		else
+			services->setVertexShaderConstant(transWorld.pointer(), 8, 4);
+
+		// set world matrix
+		core::matrix4 world = driver->getTransform(video::ETS_WORLD);
+		if(is_highlevel)
+			services->setVertexShaderConstant("mWorld", world.pointer(), 16);
 		else
 			services->setVertexShaderConstant(world.pointer(), 8, 4);
+
 	}
 
 private:
@@ -263,39 +272,29 @@ public:
 	~ShaderSource();
 
 	/*
-		Gets a shader material id from cache or
-		- if main thread, from getShaderIdDirect
-		- if other thread, adds to request queue and waits for main thread
-	*/
-	u32 getShaderId(const std::string &name);
-
-	/*
 		- If shader material specified by name is found from cache,
 		  return the cached id.
 		- Otherwise generate the shader material, add to cache and return id.
 
 		The id 0 points to a null shader. Its material is EMT_SOLID.
 	*/
-	u32 getShaderIdDirect(const std::string &name);
-
-	// Finds out the name of a cached shader.
-	std::string getShaderName(u32 id);
+	u32 getShaderIdDirect(const std::string &name, 
+		const u8 material_type, const u8 drawtype);
 
 	/*
 		If shader specified by the name pointed by the id doesn't
-		exist, create it, then return the cached shader.
+		exist, create it, then return id. 
 
 		Can be called from any thread. If called from some other thread
 		and not found in cache, the call is queued to the main thread
 		for processing.
 	*/
-	ShaderInfo getShader(u32 id);
-
-	ShaderInfo getShader(const std::string &name)
-	{
-		return getShader(getShaderId(name));
-	}
-
+	
+	u32 getShader(const std::string &name,
+		const u8 material_type, const u8 drawtype);
+	
+	ShaderInfo getShaderInfo(u32 id);
+	
 	// Processes queued shader requests from other threads.
 	// Shall be called from the main thread.
 	void processQueue();
@@ -332,10 +331,8 @@ private:
 
 	// A shader id is index in this array.
 	// The first position contains a dummy shader.
-	core::array<ShaderInfo> m_shaderinfo_cache;
-	// Maps a shader name to an index in the former.
-	core::map<std::string, u32> m_name_to_id;
-	// The two former containers are behind this mutex
+	std::vector<ShaderInfo> m_shaderinfo_cache;
+	// The former container is behind this mutex
 	JMutex m_shaderinfo_cache_mutex;
 
 	// Queued shader fetches (to be processed by the main thread)
@@ -343,7 +340,7 @@ private:
 
 	// Global constant setters
 	// TODO: Delete these in the destructor
-	core::array<IShaderConstantSetter*> m_global_setters;
+	std::vector<IShaderConstantSetter*> m_global_setters;
 };
 
 IWritableShaderSource* createShaderSource(IrrlichtDevice *device)
@@ -354,7 +351,9 @@ IWritableShaderSource* createShaderSource(IrrlichtDevice *device)
 /*
 	Generate shader given the shader name.
 */
-ShaderInfo generate_shader(std::string name, IrrlichtDevice *device,
+ShaderInfo generate_shader(std::string name,
+		u8 material_type, u8 drawtype,
+		IrrlichtDevice *device,
 		video::IShaderConstantSetCallBack *callback,
 		SourceShaderCache *sourcecache);
 
@@ -362,7 +361,7 @@ ShaderInfo generate_shader(std::string name, IrrlichtDevice *device,
 	Load shader programs
 */
 void load_shaders(std::string name, SourceShaderCache *sourcecache,
-		video::E_DRIVER_TYPE drivertype, s32 enable_shaders,
+		video::E_DRIVER_TYPE drivertype, bool enable_shaders,
 		std::string &vertex_program, std::string &pixel_program,
 		std::string &geometry_program, bool &is_highlevel);
 
@@ -373,13 +372,10 @@ ShaderSource::ShaderSource(IrrlichtDevice *device):
 
 	m_shader_callback = new ShaderCallback(this, "default");
 
-	m_shaderinfo_cache_mutex.Init();
-
 	m_main_thread = get_current_thread_id();
 
 	// Add a dummy ShaderInfo as the first index, named ""
 	m_shaderinfo_cache.push_back(ShaderInfo());
-	m_name_to_id[""] = 0;
 
 	// Add main global constant setter
 	addGlobalConstantSetter(new MainShaderConstantSetter(device));
@@ -388,57 +384,51 @@ ShaderSource::ShaderSource(IrrlichtDevice *device):
 ShaderSource::~ShaderSource()
 {
 	//m_shader_callback->drop();
+
+	for (std::vector<IShaderConstantSetter*>::iterator iter = m_global_setters.begin();
+			iter != m_global_setters.end(); iter++) {
+		delete *iter;
+	}
+	m_global_setters.clear();
 }
 
-u32 ShaderSource::getShaderId(const std::string &name)
+u32 ShaderSource::getShader(const std::string &name, 
+		const u8 material_type, const u8 drawtype)
 {
-	//infostream<<"getShaderId(): \""<<name<<"\""<<std::endl;
-
-	{
-		/*
-			See if shader already exists
-		*/
-		JMutexAutoLock lock(m_shaderinfo_cache_mutex);
-		core::map<std::string, u32>::Node *n;
-		n = m_name_to_id.find(name);
-		if(n != NULL)
-			return n->getValue();
-	}
-
 	/*
 		Get shader
 	*/
+
 	if(get_current_thread_id() == m_main_thread){
-		return getShaderIdDirect(name);
+		return getShaderIdDirect(name, material_type, drawtype);
 	} else {
-		infostream<<"getShaderId(): Queued: name=\""<<name<<"\""<<std::endl;
+		/*errorstream<<"getShader(): Queued: name=\""<<name<<"\""<<std::endl;*/
 
 		// We're gonna ask the result to be put into here
-		ResultQueue<std::string, u32, u8, u8> result_queue;
+
+		static ResultQueue<std::string, u32, u8, u8> result_queue;
 
 		// Throw a request in
 		m_get_shader_queue.add(name, 0, 0, &result_queue);
 
-		infostream<<"Waiting for shader from main thread, name=\""
-				<<name<<"\""<<std::endl;
+		/* infostream<<"Waiting for shader from main thread, name=\""
+				<<name<<"\""<<std::endl;*/
 
-		try{
-			// Wait result for a second
+		while(true) {
 			GetResult<std::string, u32, u8, u8>
-					result = result_queue.pop_front(1000);
+				result = result_queue.pop_frontNoEx();
 
-			// Check that at least something worked OK
-			assert(result.key == name);
+			if (result.key == name) {
+				return result.item;
+			}
+			else {
+				errorstream << "Got shader with invalid name: " << result.key << std::endl;
+			}
+		}
 
-			return result.item;
-		}
-		catch(ItemNotFoundException &e){
-			infostream<<"Waiting for shader timed out."<<std::endl;
-			return 0;
-		}
 	}
 
-	infostream<<"getShaderId(): Failed"<<std::endl;
+	infostream<<"getShader(): Failed"<<std::endl;
 
 	return 0;
 }
@@ -446,7 +436,8 @@ u32 ShaderSource::getShaderId(const std::string &name)
 /*
 	This method generates all the shaders
 */
-u32 ShaderSource::getShaderIdDirect(const std::string &name)
+u32 ShaderSource::getShaderIdDirect(const std::string &name, 
+		const u8 material_type, const u8 drawtype)
 {
 	//infostream<<"getShaderIdDirect(): name=\""<<name<<"\""<<std::endl;
 
@@ -454,6 +445,14 @@ u32 ShaderSource::getShaderIdDirect(const std::string &name)
 	if(name == ""){
 		infostream<<"getShaderIdDirect(): name is empty"<<std::endl;
 		return 0;
+	}
+
+	// Check if already have such instance
+	for(u32 i=0; i<m_shaderinfo_cache.size(); i++){
+		ShaderInfo *info = &m_shaderinfo_cache[i];
+		if(info->name == name && info->material_type == material_type &&
+			info->drawtype == drawtype)
+			return i;
 	}
 
 	/*
@@ -465,25 +464,7 @@ u32 ShaderSource::getShaderIdDirect(const std::string &name)
 		return 0;
 	}
 
-	/*
-		See if shader already exists
-	*/
-	{
-		JMutexAutoLock lock(m_shaderinfo_cache_mutex);
-
-		core::map<std::string, u32>::Node *n;
-		n = m_name_to_id.find(name);
-		if(n != NULL){
-			/*infostream<<"getShaderIdDirect(): \""<<name
-					<<"\" found in cache"<<std::endl;*/
-			return n->getValue();
-		}
-	}
-
-	/*infostream<<"getShaderIdDirect(): \""<<name
-			<<"\" NOT found in cache. Creating it."<<std::endl;*/
-
-	ShaderInfo info = generate_shader(name, m_device,
+	ShaderInfo info = generate_shader(name, material_type, drawtype, m_device,
 			m_shader_callback, &m_sourcecache);
 
 	/*
@@ -494,29 +475,15 @@ u32 ShaderSource::getShaderIdDirect(const std::string &name)
 
 	u32 id = m_shaderinfo_cache.size();
 	m_shaderinfo_cache.push_back(info);
-	m_name_to_id.insert(name, id);
 
-	/*infostream<<"getShaderIdDirect(): "
-			<<"Returning id="<<id<<" for name \""<<name<<"\""<<std::endl;*/
+	infostream<<"getShaderIdDirect(): "
+			<<"Returning id="<<id<<" for name \""<<name<<"\""<<std::endl;
 
 	return id;
 }
 
-std::string ShaderSource::getShaderName(u32 id)
-{
-	JMutexAutoLock lock(m_shaderinfo_cache_mutex);
 
-	if(id >= m_shaderinfo_cache.size()){
-		errorstream<<"ShaderSource::getShaderName(): id="<<id
-				<<" >= m_shaderinfo_cache.size()="
-				<<m_shaderinfo_cache.size()<<std::endl;
-		return "";
-	}
-
-	return m_shaderinfo_cache[id].name;
-}
-
-ShaderInfo ShaderSource::getShader(u32 id)
+ShaderInfo ShaderSource::getShaderInfo(u32 id)
 {
 	JMutexAutoLock lock(m_shaderinfo_cache_mutex);
 
@@ -528,26 +495,8 @@ ShaderInfo ShaderSource::getShader(u32 id)
 
 void ShaderSource::processQueue()
 {
-	/*
-		Fetch shaders
-	*/
-	if(m_get_shader_queue.size() > 0){
-		GetRequest<std::string, u32, u8, u8>
-				request = m_get_shader_queue.pop();
+ 
 
-		/*infostream<<"ShaderSource::processQueue(): "
-				<<"got shader request with "
-				<<"name=\""<<request.key<<"\""
-				<<std::endl;*/
-
-		GetResult<std::string, u32, u8, u8>
-				result;
-		result.key = request.key;
-		result.callers = request.callers;
-		result.item = getShaderIdDirect(request.key);
-
-		request.dest->push_back(result);
-	}
 }
 
 void ShaderSource::insertSourceShader(const std::string &name_of_shader,
@@ -579,8 +528,10 @@ void ShaderSource::rebuildShaders()
 	// Recreate shaders
 	for(u32 i=0; i<m_shaderinfo_cache.size(); i++){
 		ShaderInfo *info = &m_shaderinfo_cache[i];
-		*info = generate_shader(info->name, m_device,
-				m_shader_callback, &m_sourcecache);
+		if(info->name != ""){
+			*info = generate_shader(info->name, info->material_type,
+					info->drawtype, m_device, m_shader_callback, &m_sourcecache);
+		}
 	}
 }
 
@@ -592,33 +543,39 @@ void ShaderSource::onSetConstants(video::IMaterialRendererServices *services,
 		setter->onSetConstants(services, is_highlevel);
 	}
 }
- 
-ShaderInfo generate_shader(std::string name, IrrlichtDevice *device,
-		video::IShaderConstantSetCallBack *callback,
+
+ShaderInfo generate_shader(std::string name, u8 material_type, u8 drawtype,
+		IrrlichtDevice *device,	video::IShaderConstantSetCallBack *callback,
 		SourceShaderCache *sourcecache)
 {
-	/*infostream<<"generate_shader(): "
-			"\""<<name<<"\""<<std::endl;*/
-
 	ShaderInfo shaderinfo;
 	shaderinfo.name = name;
+	shaderinfo.material_type = material_type;
+	shaderinfo.drawtype = drawtype;
 	shaderinfo.material = video::EMT_SOLID;
-
-	/*
-		Get the base material
-	*/
-	std::string base_material_name =
-		trim(sourcecache->getOrLoad(name, "base.txt"));
-	for(s32 i = 0; video::sBuiltInMaterialTypeNames[i] != 0; i++){
-		if(video::sBuiltInMaterialTypeNames[i] == base_material_name){
-			shaderinfo.material = (video::E_MATERIAL_TYPE) i;
+	switch(material_type){
+		case TILE_MATERIAL_BASIC:
+			shaderinfo.base_material = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
 			break;
-		}
+		case TILE_MATERIAL_ALPHA:
+			shaderinfo.base_material = video::EMT_TRANSPARENT_ALPHA_CHANNEL;
+			break;
+		case TILE_MATERIAL_LIQUID_TRANSPARENT:
+			shaderinfo.base_material = video::EMT_TRANSPARENT_VERTEX_ALPHA;
+			break;
+		case TILE_MATERIAL_LIQUID_OPAQUE:
+			shaderinfo.base_material = video::EMT_SOLID;
+			break;
+		case TILE_MATERIAL_WAVING_LEAVES:
+			shaderinfo.base_material = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+			break;
+		case TILE_MATERIAL_WAVING_PLANTS:
+			shaderinfo.base_material = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+		break;
 	}
-
-	// 0 = off, 1 = assembly shaders only, 2 = highlevel or assembly
-	s32 enable_shaders = g_settings->getS32("enable_shaders");
-	if(enable_shaders <= 0)
+	
+	bool enable_shaders = g_settings->getBool("enable_shaders");
+	if(!enable_shaders)
 		return shaderinfo;
 
 	video::IVideoDriver* driver = device->getVideoDriver();
@@ -642,7 +599,6 @@ ShaderInfo generate_shader(std::string name, IrrlichtDevice *device,
 	load_shaders(name, sourcecache, driver->getDriverType(),
 			enable_shaders, vertex_program, pixel_program,
 			geometry_program, is_highlevel);
-
 	// Check hardware/driver support
 	if(vertex_program != "" &&
 			!driver->queryFeature(video::EVDF_VERTEX_SHADER_1_1) &&
@@ -672,6 +628,134 @@ ShaderInfo generate_shader(std::string name, IrrlichtDevice *device,
 	if(vertex_program == "" && pixel_program == "" && geometry_program == "")
 		return shaderinfo;
 
+	// Create shaders header
+	std::string shaders_header = "#version 120\n";
+
+	static const char* drawTypes[] = {
+		"NDT_NORMAL",
+		"NDT_AIRLIKE",
+		"NDT_LIQUID",
+		"NDT_FLOWINGLIQUID",
+		"NDT_GLASSLIKE",
+		"NDT_ALLFACES",
+		"NDT_ALLFACES_OPTIONAL",
+		"NDT_TORCHLIKE",
+		"NDT_SIGNLIKE",
+		"NDT_PLANTLIKE",
+		"NDT_FENCELIKE",
+		"NDT_RAILLIKE",
+		"NDT_NODEBOX",
+		"NDT_GLASSLIKE_FRAMED"
+	};
+	
+	for (int i = 0; i < 14; i++){
+		shaders_header += "#define ";
+		shaders_header += drawTypes[i];
+		shaders_header += " ";
+		shaders_header += itos(i);
+		shaders_header += "\n";
+	}
+
+	static const char* materialTypes[] = {
+		"TILE_MATERIAL_BASIC",
+		"TILE_MATERIAL_ALPHA",
+		"TILE_MATERIAL_LIQUID_TRANSPARENT",
+		"TILE_MATERIAL_LIQUID_OPAQUE",
+		"TILE_MATERIAL_WAVING_LEAVES",
+		"TILE_MATERIAL_WAVING_PLANTS"
+	};
+
+	for (int i = 0; i < 6; i++){
+		shaders_header += "#define ";
+		shaders_header += materialTypes[i];
+		shaders_header += " ";
+		shaders_header += itos(i);
+		shaders_header += "\n";
+	}
+
+	shaders_header += "#define MATERIAL_TYPE ";
+	shaders_header += itos(material_type);
+	shaders_header += "\n";
+	shaders_header += "#define DRAW_TYPE ";
+	shaders_header += itos(drawtype);
+	shaders_header += "\n";
+
+	if (g_settings->getBool("generate_normalmaps")){
+		shaders_header += "#define GENERATE_NORMALMAPS\n";
+		shaders_header += "#define NORMALMAPS_STRENGTH ";
+		shaders_header += ftos(g_settings->getFloat("normalmaps_strength"));
+		shaders_header += "\n";
+		float sample_step;
+		int smooth = (int)g_settings->getFloat("normalmaps_smooth");
+		switch (smooth){
+		case 0:
+			sample_step = 0.0078125; // 1.0 / 128.0
+			break;
+		case 1:
+			sample_step = 0.00390625; // 1.0 / 256.0
+			break;
+		case 2:
+			sample_step = 0.001953125; // 1.0 / 512.0
+			break;
+		default:
+			sample_step = 0.0078125;
+			break;
+		}
+		shaders_header += "#define SAMPLE_STEP ";
+		shaders_header += ftos(sample_step);
+		shaders_header += "\n";
+	}
+
+	if (g_settings->getBool("enable_bumpmapping"))
+		shaders_header += "#define ENABLE_BUMPMAPPING\n";
+
+	if (g_settings->getBool("enable_parallax_occlusion")){
+		shaders_header += "#define ENABLE_PARALLAX_OCCLUSION\n";
+		shaders_header += "#define PARALLAX_OCCLUSION_SCALE ";
+		shaders_header += ftos(g_settings->getFloat("parallax_occlusion_scale"));
+		shaders_header += "\n";
+		shaders_header += "#define PARALLAX_OCCLUSION_BIAS ";
+		shaders_header += ftos(g_settings->getFloat("parallax_occlusion_bias"));
+		shaders_header += "\n";
+	}
+
+	if (g_settings->getBool("enable_bumpmapping") || g_settings->getBool("enable_parallax_occlusion"))
+		shaders_header += "#define USE_NORMALMAPS\n";
+
+	if (g_settings->getBool("enable_waving_water")){
+		shaders_header += "#define ENABLE_WAVING_WATER 1\n";
+		shaders_header += "#define WATER_WAVE_HEIGHT ";
+		shaders_header += ftos(g_settings->getFloat("water_wave_height"));
+		shaders_header += "\n";
+		shaders_header += "#define WATER_WAVE_LENGTH ";
+		shaders_header += ftos(g_settings->getFloat("water_wave_length"));
+		shaders_header += "\n";
+		shaders_header += "#define WATER_WAVE_SPEED ";
+		shaders_header += ftos(g_settings->getFloat("water_wave_speed"));
+		shaders_header += "\n";
+	} else{
+		shaders_header += "#define ENABLE_WAVING_WATER 0\n";
+	}
+
+	shaders_header += "#define ENABLE_WAVING_LEAVES ";
+	if (g_settings->getBool("enable_waving_leaves"))
+		shaders_header += "1\n";
+	else 	
+		shaders_header += "0\n";
+
+	shaders_header += "#define ENABLE_WAVING_PLANTS ";		
+	if (g_settings->getBool("enable_waving_plants"))
+		shaders_header += "1\n";
+	else
+		shaders_header += "0\n";
+
+	if(pixel_program != "")
+		pixel_program = shaders_header + pixel_program;
+	if(vertex_program != "")
+		vertex_program = shaders_header + vertex_program;
+	if(geometry_program != "")
+		geometry_program = shaders_header + geometry_program;
+
 	// Call addHighLevelShaderMaterial() or addShaderMaterial()
 	const c8* vertex_program_ptr = 0;
 	const c8* pixel_program_ptr = 0;
@@ -698,11 +782,10 @@ ShaderInfo generate_shader(std::string name, IrrlichtDevice *device,
 			scene::EPT_TRIANGLES,      // Geometry shader input
 			scene::EPT_TRIANGLE_STRIP, // Geometry shader output
 			0,                         // Support maximum number of vertices
-			callback,             // Set-constant callback
-			shaderinfo.material,  // Base material
-			1                     // Userdata passed to callback
+			callback,                  // Set-constant callback
+			shaderinfo.base_material,  // Base material
+			1                          // Userdata passed to callback
 			);
-
 		if(shadermat == -1){
 			errorstream<<"generate_shader(): "
 					"failed to generate \""<<name<<"\", "
@@ -717,7 +800,7 @@ ShaderInfo generate_shader(std::string name, IrrlichtDevice *device,
 			vertex_program_ptr,   // Vertex shader program
 			pixel_program_ptr,    // Pixel shader program
 			callback,             // Set-constant callback
-			shaderinfo.material,  // Base material
+			shaderinfo.base_material,  // Base material
 			0                     // Userdata passed to callback
 			);
 
@@ -740,7 +823,7 @@ ShaderInfo generate_shader(std::string name, IrrlichtDevice *device,
 }
 
 void load_shaders(std::string name, SourceShaderCache *sourcecache,
-		video::E_DRIVER_TYPE drivertype, s32 enable_shaders,
+		video::E_DRIVER_TYPE drivertype, bool enable_shaders,
 		std::string &vertex_program, std::string &pixel_program,
 		std::string &geometry_program, bool &is_highlevel)
 {
@@ -749,7 +832,7 @@ void load_shaders(std::string name, SourceShaderCache *sourcecache,
 	geometry_program = "";
 	is_highlevel = false;
 
-	if(enable_shaders >= 2){
+	if(enable_shaders){
 		// Look for high level shaders
 		if(drivertype == video::EDT_DIRECT3D9){
 			// Direct3D 9: HLSL
@@ -770,24 +853,4 @@ void load_shaders(std::string name, SourceShaderCache *sourcecache,
 		}
 	}
 
-	if(enable_shaders >= 1){
-		// Look for assembly shaders
-		if(drivertype == video::EDT_DIRECT3D8){
-			// Direct3D 8 assembly shaders
-			vertex_program = sourcecache->getOrLoad(name, "d3d8_vertex.asm");
-			pixel_program = sourcecache->getOrLoad(name, "d3d8_pixel.asm");
-		}
-		else if(drivertype == video::EDT_DIRECT3D9){
-			// Direct3D 9 assembly shaders
-			vertex_program = sourcecache->getOrLoad(name, "d3d9_vertex.asm");
-			pixel_program = sourcecache->getOrLoad(name, "d3d9_pixel.asm");
-		}
-		else if(drivertype == video::EDT_OPENGL){
-			// OpenGL assembly shaders
-			vertex_program = sourcecache->getOrLoad(name, "opengl_vertex.asm");
-			pixel_program = sourcecache->getOrLoad(name, "opengl_fragment.asm");
-		}
-		if(vertex_program != "" || pixel_program != "")
-			return;
-	}
 }

@@ -24,116 +24,135 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #define AVERAGE_MUD_AMOUNT 4
 
+/////////////////// Mapgen V6 flags
+#define MGV6_JUNGLES    0x01
+#define MGV6_BIOMEBLEND 0x02
+#define MGV6_MUDFLOW    0x04
+
+
+extern FlagDesc flagdesc_mapgen_v6[];
+
+
 enum BiomeType
 {
 	BT_NORMAL,
 	BT_DESERT
 };
 
-extern NoiseParams nparams_v6_def_terrain_base;
-extern NoiseParams nparams_v6_def_terrain_higher;
-extern NoiseParams nparams_v6_def_steepness;
-extern NoiseParams nparams_v6_def_height_select;
-extern NoiseParams nparams_v6_def_trees;
-extern NoiseParams nparams_v6_def_mud;
-extern NoiseParams nparams_v6_def_beach;
-extern NoiseParams nparams_v6_def_biome;
-extern NoiseParams nparams_v6_def_cave;
-
-struct MapgenV6Params : public MapgenParams {
+struct MapgenV6Params : public MapgenSpecificParams {
+	u32 spflags;
 	float freq_desert;
 	float freq_beach;
-	NoiseParams *np_terrain_base;
-	NoiseParams *np_terrain_higher;
-	NoiseParams *np_steepness;
-	NoiseParams *np_height_select;
-	NoiseParams *np_trees;
-	NoiseParams *np_mud;
-	NoiseParams *np_beach;
-	NoiseParams *np_biome;
-	NoiseParams *np_cave;
-
-	MapgenV6Params() {
-		freq_desert       = 0.45;
-		freq_beach        = 0.15;
-		np_terrain_base   = &nparams_v6_def_terrain_base;
-		np_terrain_higher = &nparams_v6_def_terrain_higher;
-		np_steepness      = &nparams_v6_def_steepness;
-		np_height_select  = &nparams_v6_def_height_select;
-		np_trees          = &nparams_v6_def_trees;
-		np_mud            = &nparams_v6_def_mud;
-		np_beach          = &nparams_v6_def_beach;
-		np_biome          = &nparams_v6_def_biome;
-		np_cave           = &nparams_v6_def_cave;
-	}
+	NoiseParams np_terrain_base;
+	NoiseParams np_terrain_higher;
+	NoiseParams np_steepness;
+	NoiseParams np_height_select;
+	NoiseParams np_mud;
+	NoiseParams np_beach;
+	NoiseParams np_biome;
+	NoiseParams np_cave;
+	NoiseParams np_humidity;
+	NoiseParams np_trees;
+	NoiseParams np_apple_trees;
 	
-	bool readParams(Settings *settings);
+	MapgenV6Params();
+	~MapgenV6Params() {}
+	
+	void readParams(Settings *settings);
 	void writeParams(Settings *settings);
 };
 
 class MapgenV6 : public Mapgen {
 public:
-	//ManualMapVoxelManipulator &vmanip;
+	EmergeManager *emerge;
 
 	int ystride;
-	v3s16 csize;
+	u32 flags;
+	u32 spflags;
 
+	u32 blockseed;
 	v3s16 node_min;
 	v3s16 node_max;
+	v3s16 full_node_min;
+	v3s16 full_node_max;
+	v3s16 central_area_size;
+	int volume_nodes;
 
 	Noise *noise_terrain_base;
 	Noise *noise_terrain_higher;
 	Noise *noise_steepness;
 	Noise *noise_height_select;
-	Noise *noise_trees;
 	Noise *noise_mud;
 	Noise *noise_beach;
 	Noise *noise_biome;
-
-	float *map_terrain_base;
-	float *map_terrain_higher;
-	float *map_steepness;
-	float *map_height_select;
-	float *map_trees;
-	float *map_mud;
-	float *map_beach;
-	float *map_biome;
-
 	NoiseParams *np_cave;
-
-	u32 flags;
+	NoiseParams *np_humidity;
+	NoiseParams *np_trees;
+	NoiseParams *np_apple_trees;
 	float freq_desert;
 	float freq_beach;
 
-	MapgenV6(int mapgenid, MapgenV6Params *params);
+	content_t c_stone;
+	content_t c_dirt;
+	content_t c_dirt_with_grass;
+	content_t c_sand;
+	content_t c_water_source;
+	content_t c_lava_source;
+	content_t c_gravel;
+	content_t c_cobble;
+	content_t c_desert_sand;
+	content_t c_desert_stone;
+
+	content_t c_mossycobble;
+	content_t c_sandbrick;
+	content_t c_stair_cobble;
+	content_t c_stair_sandstone;
+
+	MapgenV6(int mapgenid, MapgenParams *params, EmergeManager *emerge);
 	~MapgenV6();
 	
 	void makeChunk(BlockMakeData *data);
 	int getGroundLevelAtPoint(v2s16 p);
 
-	double baseRockLevelFromNoise(v2s16 p);
-	static s16 find_ground_level(VoxelManipulator &vmanip,
-								 v2s16 p2d, INodeDefManager *ndef);
-	static s16 find_stone_level(VoxelManipulator &vmanip,
-								 v2s16 p2d, INodeDefManager *ndef);
-	void make_tree(ManualMapVoxelManipulator &vmanip, v3s16 p0,
-					 bool is_apple_tree, INodeDefManager *ndef);
-	double tree_amount_2d(u64 seed, v2s16 p);
+	float baseTerrainLevel(float terrain_base, float terrain_higher,
+						   float steepness, float height_select);
+	virtual float baseTerrainLevelFromNoise(v2s16 p);
+	virtual float baseTerrainLevelFromMap(v2s16 p);
+	virtual float baseTerrainLevelFromMap(int index);
+
+	s16 find_stone_level(v2s16 p2d);
 	bool block_is_underground(u64 seed, v3s16 blockpos);
-	double base_rock_level_2d(u64 seed, v2s16 p);
 	s16 find_ground_level_from_noise(u64 seed, v2s16 p2d, s16 precision);
-	double get_mud_add_amount(u64 seed, v2s16 p);
-	bool get_have_beach(u64 seed, v2s16 p2d);
-	BiomeType get_biome(u64 seed, v2s16 p2d);
+	
+	float getHumidity(v2s16 p);
+	float getTreeAmount(v2s16 p);
+	bool getHaveAppleTree(v2s16 p);
+	float getMudAmount(v2s16 p);
+	virtual float getMudAmount(int index);
+	bool getHaveBeach(v2s16 p);
+	bool getHaveBeach(int index);
+	BiomeType getBiome(v2s16 p);
+	BiomeType getBiome(int index, v2s16 p);
+	
 	u32 get_blockseed(u64 seed, v3s16 p);
+	
+	virtual void calculateNoise();
+	int generateGround();
+	void addMud();
+	void flowMud(s16 &mudflow_minpos, s16 &mudflow_maxpos);
+	void addDirtGravelBlobs();
+	void growGrass();
+	void placeTreesAndJungleGrass();
+	virtual void generateCaves(int max_stone_y);
+	virtual void generateExperimental() {}
 };
 
 struct MapgenFactoryV6 : public MapgenFactory {
 	Mapgen *createMapgen(int mgid, MapgenParams *params, EmergeManager *emerge) {
-		return new MapgenV6(mgid, (MapgenV6Params *)params);
+		return new MapgenV6(mgid, params, emerge);
 	};
 	
-	MapgenParams *createMapgenParams() {
+	MapgenSpecificParams *createMapgenParams() {
 		return new MapgenV6Params();
 	};
 };

@@ -23,17 +23,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "irrlichttypes_extrabloated.h"
 #include <string>
 #include "keycode.h"
+#include <list>
 
-class KeyList : protected core::list<KeyPress>
+class KeyList : protected std::list<KeyPress>
 {
-	typedef core::list<KeyPress> super;
-	typedef super::Iterator Iterator;
-	typedef super::ConstIterator ConstIterator;
+	typedef std::list<KeyPress> super;
+	typedef super::iterator iterator;
+	typedef super::const_iterator const_iterator;
 
-	virtual ConstIterator find(const KeyPress &key) const
+	virtual const_iterator find(const KeyPress &key) const
 	{
-		ConstIterator f(begin());
-		ConstIterator e(end());
+		const_iterator f(begin());
+		const_iterator e(end());
 		while (f!=e) {
 			if (*f == key)
 				return f;
@@ -42,10 +43,10 @@ class KeyList : protected core::list<KeyPress>
 		return e;
 	}
 
-	virtual Iterator find(const KeyPress &key)
+	virtual iterator find(const KeyPress &key)
 	{
-		Iterator f(begin());
-		Iterator e(end());
+		iterator f(begin());
+		iterator e(end());
 		while (f!=e) {
 			if (*f == key)
 				return f;
@@ -65,14 +66,14 @@ public:
 
 	void unset(const KeyPress &key)
 	{
-		Iterator p(find(key));
+		iterator p(find(key));
 		if (p != end())
 			erase(p);
 	}
 
 	void toggle(const KeyPress &key)
 	{
-		Iterator p(this->find(key));
+		iterator p(this->find(key));
 		if (p != end())
 			erase(p);
 		else
@@ -136,7 +137,6 @@ void the_game(
 	std::string address, // If "", local server is used
 	u16 port,
 	std::wstring &error_message,
-	std::string configpath,
 	ChatBackend &chat_backend,
 	const SubgameSpec &gamespec, // Used for local game
 	bool simple_singleplayer_mode

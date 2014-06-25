@@ -18,8 +18,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include "quicktune.h"
-#include <jmutex.h>
-#include <jmutexautolock.h>
+#include "jthread/jmutex.h"
+#include "jthread/jmutexautolock.h"
 #include "util/string.h"
 
 std::string QuicktuneValue::getString()
@@ -55,7 +55,6 @@ static void makeMutex()
 {
 	if(!g_mutex){
 		g_mutex = new JMutex();
-		g_mutex->Init();
 	}
 }
 

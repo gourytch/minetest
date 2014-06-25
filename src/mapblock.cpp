@@ -21,8 +21,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include <sstream>
 #include "map.h"
-// For g_settings
-#include "main.h"
 #include "light.h"
 #include "nodedef.h"
 #include "nodemetadata.h"
@@ -31,6 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "nameidmapping.h"
 #include "content_mapnode.h" // For legacy name-id mapping
 #include "content_nodemeta.h" // For legacy deserialization
+#include "serialization.h"
 #ifndef SERVER
 #include "mapblock_mesh.h"
 #endif
@@ -65,7 +64,6 @@ MapBlock::MapBlock(Map *parent, v3s16 pos, IGameDef *gamedef, bool dummy):
 		reallocate();
 	
 #ifndef SERVER
-	//mesh_mutex.Init();
 	mesh = NULL;
 #endif
 }
@@ -168,7 +166,7 @@ MapNode MapBlock::getNodeParentNoEx(v3s16 p)
 	if black_air_left!=NULL, it is set to true if non-sunlighted
 	air is left in block.
 */
-bool MapBlock::propagateSunlight(core::map<v3s16, bool> & light_sources,
+bool MapBlock::propagateSunlight(std::set<v3s16> & light_sources,
 		bool remove_light, bool *black_air_left)
 {
 	INodeDefManager *nodemgr = m_gamedef->ndef();
@@ -287,7 +285,7 @@ bool MapBlock::propagateSunlight(core::map<v3s16, bool> & light_sources,
 				
 				if(diminish_light(current_light) != 0)
 				{
-					light_sources.insert(pos_relative + pos, true);
+					light_sources.insert(pos_relative + pos);
 				}
 
 				if(current_light == 0 && stopped_to_solid_object)
@@ -454,10 +452,16 @@ s16 MapBlock::getGroundLevel(v2s16 p2d)
 */
 // List relevant id-name pairs for ids in the block using nodedef
 // Renumbers the content IDs (starting at 0 and incrementing
+// use static memory requires about 65535 * sizeof(int) ram in order to be
+// sure we can handle all content ids. But it's absolutely worth it as it's
+// a speedup of 4 for one of the major time consuming functions on storing
+// mapblocks.
+static content_t getBlockNodeIdMapping_mapping[USHRT_MAX];
 static void getBlockNodeIdMapping(NameIdMapping *nimap, MapNode *nodes,
 		INodeDefManager *nodedef)
 {
-	std::map<content_t, content_t> mapping;
+	memset(getBlockNodeIdMapping_mapping, 0xFF, USHRT_MAX * sizeof(content_t));
+
 	std::set<content_t> unknown_contents;
 	content_t id_counter = 0;
 	for(u32 i=0; i<MAP_BLOCKSIZE*MAP_BLOCKSIZE*MAP_BLOCKSIZE; i++)
@@ -466,16 +470,14 @@ static void getBlockNodeIdMapping(NameIdMapping *nimap, MapNode *nodes,
 		content_t id = CONTENT_IGNORE;
 
 		// Try to find an existing mapping
-		std::map<content_t, content_t>::iterator j = mapping.find(global_id);
-		if(j != mapping.end())
-		{
-			id = j->second;
+		if (getBlockNodeIdMapping_mapping[global_id] != 0xFFFF) {
+			id = getBlockNodeIdMapping_mapping[global_id];
 		}
 		else
 		{
 			// We have to assign a new mapping
 			id = id_counter++;
-			mapping.insert(std::make_pair(global_id, id));
+			getBlockNodeIdMapping_mapping[global_id] = id;
 
 			const ContentFeatures &f = nodedef->get(global_id);
 			const std::string &name = f.name;
@@ -635,6 +637,21 @@ void MapBlock::serialize(std::ostream &os, u8 version, bool disk)
 	}
 }
 
+void MapBlock::serializeNetworkSpecific(std::ostream &os, u16 net_proto_version)
+{
+	if(data == NULL)
+	{
+		throw SerializationError("ERROR: Not writing dummy block.");
+	}
+
+	if(net_proto_version >= 21){
+		int version = 1;
+		writeU8(os, version);
+		writeF1000(os, 0); // deprecated heat
+		writeF1000(os, 0); // deprecated humidity
+	}
+}
+
 void MapBlock::deSerialize(std::istream &is, u8 version, bool disk)
 {
 	if(!ser_ver_supported(version))
@@ -738,6 +755,24 @@ void MapBlock::deSerialize(std::istream &is, u8 version, bool disk)
 		
 	TRACESTREAM(<<"MapBlock::deSerialize "<<PP(getPos())
 			<<": Done."<<std::endl);
+}
+
+void MapBlock::deSerializeNetworkSpecific(std::istream &is)
+{
+	try {
+		int version = readU8(is);
+		//if(version != 1)
+		//	throw SerializationError("unsupported MapBlock version");
+		if(version >= 1) {
+			readF1000(is); // deprecated heat
+			readF1000(is); // deprecated humidity
+		}
+	}
+	catch(SerializationError &e)
+	{
+		errorstream<<"WARNING: MapBlock::deSerializeNetworkSpecific(): Ignoring an error"
+				<<": "<<e.what()<<std::endl;
+	}
 }
 
 /*

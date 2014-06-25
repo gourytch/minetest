@@ -31,7 +31,7 @@
 
 #if (defined(WIN32) || defined(_WIN32_WCE))
 	#ifndef _WIN32_WINNT
-		#define _WIN32_WINNT 0x0500
+		#define _WIN32_WINNT 0x0501
 	#endif
 	#ifndef _WIN32_WCE
 		#include <process.h>
@@ -53,10 +53,9 @@ class JMutex
 public:
 	JMutex();
 	~JMutex();
-	int Init();
 	int Lock();
 	int Unlock();
-	bool IsInitialized() 						{ return initialized; }
+
 private:
 #if (defined(WIN32) || defined(_WIN32_WCE))
 #ifdef JMUTEX_CRITICALSECTION
@@ -66,58 +65,15 @@ private:
 #endif // JMUTEX_CRITICALSECTION
 #else // pthread mutex
 	pthread_mutex_t mutex;
+
+	bool IsLocked() {
+		if (pthread_mutex_trylock(&mutex)) {
+			pthread_mutex_unlock(&mutex);
+			return true;
+		}
+		return false;
+	}
 #endif // WIN32
-	bool initialized;
 };
-
-#ifdef _WIN32
-
-class Event {
-	HANDLE hEvent;
-
-public:
-	Event() {
-		hEvent = CreateEvent(NULL, 0, 0, NULL);
-	}
-	
-	~Event() {
-		CloseHandle(hEvent);
-	}
-	
-	void wait() {
-		WaitForSingleObject(hEvent, INFINITE); 
-	}
-	
-	void signal() {
-		SetEvent(hEvent);
-	}
-};
-
-#else
-
-#include <semaphore.h>
-
-class Event {
-	sem_t sem;
-
-public:
-	Event() {
-		sem_init(&sem, 0, 0);
-	}
-	
-	~Event() {
-		sem_destroy(&sem);
-	}
-	
-	void wait() {
-		sem_wait(&sem);
-	}
-	
-	void signal() {
-		sem_post(&sem);
-	}
-};
-
-#endif
 
 #endif // JMUTEX_H

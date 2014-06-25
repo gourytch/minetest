@@ -20,18 +20,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #ifndef MAPBLOCK_HEADER
 #define MAPBLOCK_HEADER
 
-#include <jmutex.h>
-#include <jmutexautolock.h>
-#include <exception>
+#include <set>
 #include "debug.h"
-#include "irrlichttypes.h"
 #include "irr_v3d.h"
-#include "irr_aabb3d.h"
 #include "mapnode.h"
 #include "exceptions.h"
-#include "serialization.h"
 #include "constants.h"
-#include "voxel.h"
 #include "staticobject.h"
 #include "nodemetadata.h"
 #include "nodetimer.h"
@@ -42,6 +36,7 @@ class Map;
 class NodeMetadataList;
 class IGameDef;
 class MapBlockMesh;
+class VoxelManipulator;
 
 #define BLOCK_TIMESTAMP_UNDEFINED 0xffffffff
 
@@ -352,7 +347,7 @@ public:
 	}
 
 	// See comments in mapblock.cpp
-	bool propagateSunlight(core::map<v3s16, bool> & light_sources,
+	bool propagateSunlight(std::set<v3s16> & light_sources,
 			bool remove_light=false, bool *black_air_left=NULL);
 	
 	// Copies data to VoxelManipulator to getPosRelative()
@@ -478,6 +473,9 @@ public:
 	// unknown blocks from id-name mapping to wndef
 	void deSerialize(std::istream &is, u8 version, bool disk);
 
+	void serializeNetworkSpecific(std::ostream &os, u16 net_proto_version);
+	void deSerializeNetworkSpecific(std::istream &is);
+
 private:
 	/*
 		Private methods
@@ -510,13 +508,12 @@ public:
 
 #ifndef SERVER // Only on client
 	MapBlockMesh *mesh;
-	//JMutex mesh_mutex;
 #endif
 	
 	NodeMetadataList m_node_metadata;
 	NodeTimerList m_node_timers;
 	StaticObjectList m_static_objects;
-	
+
 private:
 	/*
 		Private member variables

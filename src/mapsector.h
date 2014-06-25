@@ -20,10 +20,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #ifndef MAPSECTOR_HEADER
 #define MAPSECTOR_HEADER
 
-#include <jmutex.h>
-#include "irrlichttypes_bloated.h"
-#include "exceptions.h"
+#include "irrlichttypes.h"
+#include "irr_v2d.h"
 #include <ostream>
+#include <map>
+#include <list>
 
 class MapBlock;
 class Map;
@@ -60,7 +61,7 @@ public:
 	
 	void deleteBlock(MapBlock *block);
 	
-	void getBlocks(core::list<MapBlock*> &dest);
+	void getBlocks(std::list<MapBlock*> &dest);
 	
 	// Always false at the moment, because sector contains no metadata.
 	bool differs_from_disk;
@@ -68,7 +69,7 @@ public:
 protected:
 	
 	// The pile of MapBlocks
-	core::map<s16, MapBlock*> m_blocks;
+	std::map<s16, MapBlock*> m_blocks;
 
 	Map *m_parent;
 	// Position on parent (in MapBlock widths)
@@ -110,7 +111,7 @@ public:
 			std::istream &is,
 			Map *parent,
 			v2s16 p2d,
-			core::map<v2s16, MapSector*> & sectors,
+			std::map<v2s16, MapSector*> & sectors,
 			IGameDef *gamedef
 		);
 		

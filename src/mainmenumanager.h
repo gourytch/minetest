@@ -25,7 +25,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 #include "debug.h" // assert
 #include "modalMenu.h"
-#include "guiPauseMenu.h" //For IGameCallback
+#include <list>
+
+class IGameCallback
+{
+public:
+	virtual void exitToOS() = 0;
+	virtual void disconnect() = 0;
+	virtual void changePassword() = 0;
+	virtual void changeVolume() = 0;
+};
 
 extern gui::IGUIEnvironment* guienv;
 extern gui::IGUIStaticText *guiroot;
@@ -37,15 +46,15 @@ class MainMenuManager : public IMenuManager
 public:
 	virtual void createdMenu(GUIModalMenu *menu)
 	{
-		for(core::list<GUIModalMenu*>::Iterator
+		for(std::list<GUIModalMenu*>::iterator
 				i = m_stack.begin();
-				i != m_stack.end(); i++)
+				i != m_stack.end(); ++i)
 		{
 			assert(*i != menu);
 		}
 
 		if(m_stack.size() != 0)
-			(*m_stack.getLast())->setVisible(false);
+			m_stack.back()->setVisible(false);
 		m_stack.push_back(menu);
 	}
 
@@ -55,9 +64,9 @@ public:
 		bool removed_entry;
 		do{
 			removed_entry = false;
-			for(core::list<GUIModalMenu*>::Iterator
+			for(std::list<GUIModalMenu*>::iterator
 					i = m_stack.begin();
-					i != m_stack.end(); i++)
+					i != m_stack.end(); ++i)
 			{
 				if(*i == menu)
 				{
@@ -73,7 +82,16 @@ public:
 		m_stack.erase(i);*/
 		
 		if(m_stack.size() != 0)
-			(*m_stack.getLast())->setVisible(true);
+			m_stack.back()->setVisible(true);
+	}
+
+	// Returns true to prevent further processing
+	virtual bool preprocessEvent(const SEvent& event)
+	{
+		if(m_stack.size() != 0)
+			return m_stack.back()->preprocessEvent(event);
+		else
+			return false;
 	}
 
 	u32 menuCount()
@@ -81,7 +99,18 @@ public:
 		return m_stack.size();
 	}
 
-	core::list<GUIModalMenu*> m_stack;
+	bool pausesGame()
+	{
+		for(std::list<GUIModalMenu*>::iterator
+				i = m_stack.begin(); i != m_stack.end(); ++i)
+		{
+			if((*i)->pausesGame())
+				return true;
+		}
+		return false;
+	}
+
+	std::list<GUIModalMenu*> m_stack;
 };
 
 extern MainMenuManager g_menumgr;

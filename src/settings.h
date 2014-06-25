@@ -21,10 +21,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define SETTINGS_HEADER
 
 #include "irrlichttypes_bloated.h"
+#include "exceptions.h"
 #include <string>
-#include <jthread.h>
-#include <jmutex.h>
-#include <jmutexautolock.h>
+#include "jthread/jmutex.h"
+#include "jthread/jmutexautolock.h"
 #include "strfnd.h"
 #include <iostream>
 #include <fstream>
@@ -32,7 +32,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "debug.h"
 #include "log.h"
 #include "util/string.h"
-#include "porting.h"
+#include "util/serialize.h"
+#include <list>
+#include <map>
+#include <set>
+#include "filesys.h"
+#include <cctype>
 
 enum ValueType
 {
@@ -56,40 +61,38 @@ class Settings
 public:
 	Settings()
 	{
-		m_mutex.Init();
 	}
 
 	void writeLines(std::ostream &os)
 	{
 		JMutexAutoLock lock(m_mutex);
 
-		for(core::map<std::string, std::string>::Iterator
-				i = m_settings.getIterator();
-				i.atEnd() == false; i++)
+		for(std::map<std::string, std::string>::iterator
+				i = m_settings.begin();
+				i != m_settings.end(); ++i)
 		{
-			std::string name = i.getNode()->getKey();
-			std::string value = i.getNode()->getValue();
+			std::string name = i->first;
+			std::string value = i->second;
 			os<<name<<" = "<<value<<"\n";
 		}
 	}
   
-	// return all keys used 
+	// return all keys used
 	std::vector<std::string> getNames(){
 		std::vector<std::string> names;
-		for(core::map<std::string, std::string>::Iterator
-				i = m_settings.getIterator();
-				i.atEnd() == false; i++)
+		for(std::map<std::string, std::string>::iterator
+				i = m_settings.begin();
+				i != m_settings.end(); ++i)
 		{
-			std::string name = i.getNode()->getKey();
-			names.push_back(name);
+			names.push_back(i->first);
 		}
-		return names;  
+		return names;
 	}
 
 	// remove a setting
 	bool remove(const std::string& name)
 	{
-		return m_settings.remove(name);
+		return m_settings.erase(name);
 	}
 
 
@@ -188,8 +191,8 @@ public:
 		Returns false on EOF
 	*/
 	bool getUpdatedConfigObject(std::istream &is,
-			core::list<std::string> &dst,
-			core::map<std::string, bool> &updated,
+			std::list<std::string> &dst,
+			std::set<std::string> &updated,
 			bool &value_changed)
 	{
 		JMutexAutoLock lock(m_mutex);
@@ -228,7 +231,7 @@ public:
 		std::string value = sf.next("\n");
 		value = trim(value);
 
-		if(m_settings.find(name))
+		if(m_settings.find(name) != m_settings.end())
 		{
 			std::string newvalue = m_settings[name];
 
@@ -242,7 +245,7 @@ public:
 
 			dst.push_back(name + " = " + newvalue + line_end);
 
-			updated[name] = true;
+			updated.insert(name);
 		}
 		else //file contains a setting which is not in m_settings
 			value_changed=true;
@@ -260,8 +263,8 @@ public:
 		infostream<<"Updating configuration file: \""
 				<<filename<<"\""<<std::endl;
 
-		core::list<std::string> objects;
-		core::map<std::string, bool> updated;
+		std::list<std::string> objects;
+		std::set<std::string> updated;
 		bool something_actually_changed = false;
 
 		// Read and modify stuff
@@ -286,11 +289,11 @@ public:
 		// If something not yet determined to have been changed, check if
 		// any new stuff was added
 		if(!something_actually_changed){
-			for(core::map<std::string, std::string>::Iterator
-					i = m_settings.getIterator();
-					i.atEnd() == false; i++)
+			for(std::map<std::string, std::string>::iterator
+					i = m_settings.begin();
+					i != m_settings.end(); ++i)
 			{
-				if(updated.find(i.getNode()->getKey()))
+				if(updated.find(i->first) != updated.end())
 					continue;
 				something_actually_changed = true;
 				break;
@@ -306,39 +309,39 @@ public:
 
 		// Write stuff back
 		{
-			std::ofstream os(filename);
-			if(os.good() == false)
-			{
-				errorstream<<"Error opening configuration file"
-						" for writing: \""
-						<<filename<<"\""<<std::endl;
-				return false;
-			}
+			std::ostringstream ss(std::ios_base::binary);
 
 			/*
 				Write updated stuff
 			*/
-			for(core::list<std::string>::Iterator
+			for(std::list<std::string>::iterator
 					i = objects.begin();
-					i != objects.end(); i++)
+					i != objects.end(); ++i)
 			{
-				os<<(*i);
+				ss<<(*i);
 			}
 
 			/*
 				Write stuff that was not already in the file
 			*/
-			for(core::map<std::string, std::string>::Iterator
-					i = m_settings.getIterator();
-					i.atEnd() == false; i++)
+			for(std::map<std::string, std::string>::iterator
+					i = m_settings.begin();
+					i != m_settings.end(); ++i)
 			{
-				if(updated.find(i.getNode()->getKey()))
+				if(updated.find(i->first) != updated.end())
 					continue;
-				std::string name = i.getNode()->getKey();
-				std::string value = i.getNode()->getValue();
+				std::string name = i->first;
+				std::string value = i->second;
 				infostream<<"Adding \""<<name<<"\" = \""<<value<<"\""
 						<<std::endl;
-				os<<name<<" = "<<value<<"\n";
+				ss<<name<<" = "<<value<<"\n";
+			}
+
+			if(!fs::safeWriteToFile(filename, ss.str()))
+			{
+				errorstream<<"Error writing configuration file: \""
+						<<filename<<"\""<<std::endl;
+				return false;
 			}
 		}
 
@@ -351,7 +354,7 @@ public:
 		returns true on success
 	*/
 	bool parseCommandLine(int argc, char *argv[],
-			core::map<std::string, ValueSpec> &allowed_options)
+			std::map<std::string, ValueSpec> &allowed_options)
 	{
 		int nonopt_index = 0;
 		int i=1;
@@ -379,16 +382,16 @@ public:
 
 			std::string name = argname.substr(2);
 
-			core::map<std::string, ValueSpec>::Node *n;
+			std::map<std::string, ValueSpec>::iterator n;
 			n = allowed_options.find(name);
-			if(n == NULL)
+			if(n == allowed_options.end())
 			{
 				errorstream<<"Unknown command-line parameter \""
 						<<argname<<"\""<<std::endl;
 				return false;
 			}
 
-			ValueType type = n->getValue().type;
+			ValueType type = n->second.type;
 
 			std::string value = "";
 
@@ -444,27 +447,28 @@ public:
 	{
 		JMutexAutoLock lock(m_mutex);
 
-		return (m_settings.find(name) || m_defaults.find(name));
+		return (m_settings.find(name) != m_settings.end() || m_defaults.find(name) != m_defaults.end());
 	}
 
 	std::string get(std::string name)
 	{
 		JMutexAutoLock lock(m_mutex);
 
-		core::map<std::string, std::string>::Node *n;
+		std::map<std::string, std::string>::iterator n;
 		n = m_settings.find(name);
-		if(n == NULL)
+		if(n == m_settings.end())
 		{
 			n = m_defaults.find(name);
-			if(n == NULL)
+			if(n == m_defaults.end())
 			{
-				throw SettingNotFoundException("Setting not found");
+				throw SettingNotFoundException(("Setting [" + name + "] not found ").c_str());
 			}
 		}
 
-		return n->getValue();
+		return n->second;
 	}
 
+	//////////// Get setting
 	bool getBool(std::string name)
 	{
 		return is_yes(get(name));
@@ -569,278 +573,169 @@ public:
 		return value;
 	}
 
-	u32 getFlagStr(std::string name, FlagDesc *flagdesc)
+	u32 getFlagStr(std::string name, FlagDesc *flagdesc, u32 *flagmask)
 	{
 		std::string val = get(name);
-		return (isdigit(val[0])) ? stoi(val) : readFlagString(val, flagdesc);
+		return (std::isdigit(val[0])) ? stoi(val) :
+			readFlagString(val, flagdesc, flagmask);
 	}
 
-	template <class T> T *getStruct(std::string name, std::string format)
+	// N.B. if getStruct() is used to read a non-POD aggregate type,
+	// the behavior is undefined.
+	bool getStruct(std::string name, std::string format, void *out, size_t olen)
 	{
-		size_t len = sizeof(T);
-		std::vector<std::string *> strs_alloced;
-		std::string *str;
-		std::string valstr = get(name);
-		char *s = &valstr[0];
-		T *buf = new T;
-		char *bufpos = (char *)buf;
-		char *f, *snext;
-		size_t pos;
+		std::string valstr;
 
-		char *fmtpos, *fmt = &format[0];
-		while ((f = strtok_r(fmt, ",", &fmtpos)) && s) {
-			fmt = NULL;
-
-			bool is_unsigned = false;
-			int width = 0;
-			char valtype = *f;
-
-			width = (int)strtol(f + 1, &f, 10);
-			if (width && valtype == 's')
-				valtype = 'i';
-
-			switch (valtype) {
-				case 'u':
-					is_unsigned = true;
-					/* FALLTHROUGH */
-				case 'i':
-					if (width == 16) {
-						bufpos += PADDING(bufpos, u16);
-						if ((bufpos - (char *)buf) + sizeof(u16) <= len) {
-							if (is_unsigned)
-								*(u16 *)bufpos = (u16)strtoul(s, &s, 10);
-							else
-								*(s16 *)bufpos = (s16)strtol(s, &s, 10);
-						}
-						bufpos += sizeof(u16);
-					} else if (width == 32) {
-						bufpos += PADDING(bufpos, u32);
-						if ((bufpos - (char *)buf) + sizeof(u32) <= len) {
-							if (is_unsigned)
-								*(u32 *)bufpos = (u32)strtoul(s, &s, 10);
-							else
-								*(s32 *)bufpos = (s32)strtol(s, &s, 10);
-						}
-						bufpos += sizeof(u32);
-					} else if (width == 64) {
-						bufpos += PADDING(bufpos, u64);
-						if ((bufpos - (char *)buf) + sizeof(u64) <= len) {
-							if (is_unsigned)
-								*(u64 *)bufpos = (u64)strtoull(s, &s, 10);
-							else
-								*(s64 *)bufpos = (s64)strtoll(s, &s, 10);
-						}
-						bufpos += sizeof(u64);
-					}
-					s = strchr(s, ',');
-					break;
-				case 'b':
-					snext = strchr(s, ',');
-					if (snext)
-						*snext++ = 0;
-
-					bufpos += PADDING(bufpos, bool);
-					if ((bufpos - (char *)buf) + sizeof(bool) <= len)
-						*(bool *)bufpos = is_yes(std::string(s));
-					bufpos += sizeof(bool);
-
-					s = snext;
-					break;
-				case 'f':
-					bufpos += PADDING(bufpos, float);
-					if ((bufpos - (char *)buf) + sizeof(float) <= len)
-						*(float *)bufpos = strtof(s, &s);
-					bufpos += sizeof(float);
-
-					s = strchr(s, ',');
-					break;
-				case 's':
-					while (*s == ' ' || *s == '\t')
-						s++;
-					if (*s++ != '"') //error, expected string
-						goto fail;
-					snext = s;
-
-					while (snext[0] && !(snext[-1] != '\\' && snext[0] == '"'))
-						snext++;
-					*snext++ = 0;
-
-					bufpos += PADDING(bufpos, std::string *);
-
-					str = new std::string(s);
-					pos = 0;
-					while ((pos = str->find("\\\"", pos)) != std::string::npos)
-						str->erase(pos, 1);
-
-					if ((bufpos - (char *)buf) + sizeof(std::string *) <= len)
-						*(std::string **)bufpos = str;
-					bufpos += sizeof(std::string *);
-					strs_alloced.push_back(str);
-
-					s = *snext ? snext + 1 : NULL;
-					break;
-				case 'v':
-					while (*s == ' ' || *s == '\t')
-						s++;
-					if (*s++ != '(') //error, expected vector
-						goto fail;
-
-					if (width == 2) {
-						bufpos += PADDING(bufpos, v2f);
-
-						if ((bufpos - (char *)buf) + sizeof(v2f) <= len) {
-						v2f *v = (v2f *)bufpos;
-							v->X = strtof(s, &s);
-							s++;
-							v->Y = strtof(s, &s);
-						}
-
-						bufpos += sizeof(v2f);
-					} else if (width == 3) {
-						bufpos += PADDING(bufpos, v3f);
-						if ((bufpos - (char *)buf) + sizeof(v3f) <= len) {
-							v3f *v = (v3f *)bufpos;
-							v->X = strtof(s, &s);
-							s++;
-							v->Y = strtof(s, &s);
-							s++;
-							v->Z = strtof(s, &s);
-						}
-
-						bufpos += sizeof(v3f);
-					}
-					s = strchr(s, ',');
-					break;
-				default: //error, invalid format specifier
-					goto fail;
-			}
-
-			if (s && *s == ',')
-				s++;
-
-			if ((size_t)(bufpos - (char *)buf) > len) //error, buffer too small
-				goto fail;
+		try {
+			valstr = get(name);
+		} catch (SettingNotFoundException &e) {
+			return false;
 		}
 
-		if (f && *f) { //error, mismatched number of fields and values
-fail:
-			for (unsigned int i = 0; i != strs_alloced.size(); i++)
-				delete strs_alloced[i];
-			delete buf;
-			//delete[] buf;
-			buf = NULL;
-		}
+		if (!deSerializeStringToStruct(valstr, format, out, olen))
+			return false;
 
-		return buf;
-	}
-
-	bool setStruct(std::string name, std::string format, void *value)
-	{
-		char sbuf[2048];
-		int sbuflen = sizeof(sbuf) - 1;
-		sbuf[sbuflen] = 0;
-		std::string str;
-		int pos = 0;
-		size_t fpos;
-		char *f;
-
-		char *bufpos = (char *)value;
-		char *fmtpos, *fmt = &format[0];
-		while ((f = strtok_r(fmt, ",", &fmtpos))) {
-			fmt = NULL;
-			bool is_unsigned = false;
-			int width = 0, nprinted = 0;
-			char valtype = *f;
-
-			width = (int)strtol(f + 1, &f, 10);
-			if (width && valtype == 's')
-				valtype = 'i';
-
-			switch (valtype) {
-				case 'u':
-					is_unsigned = true;
-					/* FALLTHROUGH */
-				case 'i':
-					if (width == 16) {
-						bufpos += PADDING(bufpos, u16);
-						nprinted = snprintf(sbuf + pos, sbuflen,
-									is_unsigned ? "%u, " : "%d, ",
-									*((u16 *)bufpos));
-						bufpos += sizeof(u16);
-					} else if (width == 32) {
-						bufpos += PADDING(bufpos, u32);
-						nprinted = snprintf(sbuf + pos, sbuflen,
-									is_unsigned ? "%u, " : "%d, ",
-									*((u32 *)bufpos));
-						bufpos += sizeof(u32);
-					} else if (width == 64) {
-						bufpos += PADDING(bufpos, u64);
-						nprinted = snprintf(sbuf + pos, sbuflen,
-									is_unsigned ? "%llu, " : "%lli, ",
-									(unsigned long long)*((u64 *)bufpos));
-						bufpos += sizeof(u64);
-					}
-					break;
-				case 'b':
-					bufpos += PADDING(bufpos, bool);
-					nprinted = snprintf(sbuf + pos, sbuflen, "%s, ",
-										*((bool *)bufpos) ? "true" : "false");
-					bufpos += sizeof(bool);
-					break;
-				case 'f':
-					bufpos += PADDING(bufpos, float);
-					nprinted = snprintf(sbuf + pos, sbuflen, "%f, ",
-										*((float *)bufpos));
-					bufpos += sizeof(float);
-					break;
-				case 's':
-					bufpos += PADDING(bufpos, std::string *);
-					str = **((std::string **)bufpos);
-
-					fpos = 0;
-					while ((fpos = str.find('"', fpos)) != std::string::npos) {
-						str.insert(fpos, 1, '\\');
-						fpos += 2;
-					}
-
-					nprinted = snprintf(sbuf + pos, sbuflen, "\"%s\", ",
-										(*((std::string **)bufpos))->c_str());
-					bufpos += sizeof(std::string *);
-					break;
-				case 'v':
-					if (width == 2) {
-						bufpos += PADDING(bufpos, v2f);
-						v2f *v = (v2f *)bufpos;
-						nprinted = snprintf(sbuf + pos, sbuflen,
-											"(%f, %f), ", v->X, v->Y);
-						bufpos += sizeof(v2f);
-					} else {
-						bufpos += PADDING(bufpos, v3f);
-						v3f *v = (v3f *)bufpos;
-						nprinted = snprintf(sbuf + pos, sbuflen,
-											"(%f, %f, %f), ", v->X, v->Y, v->Z);
-						bufpos += sizeof(v3f);
-					}
-					break;
-				default:
-					return false;
-			}
-			if (nprinted < 0) //error, buffer too small
-				return false;
-			pos     += nprinted;
-			sbuflen -= nprinted;
-		}
-
-		if (pos >= 2)
-			sbuf[pos - 2] = 0;
-
-		set(name, std::string(sbuf));
 		return true;
 	}
-	
-	void setFlagStr(std::string name, u32 flags, FlagDesc *flagdesc)
+
+	//////////// Try to get value, no exception thrown
+	bool getNoEx(std::string name, std::string &val)
 	{
-		set(name, writeFlagString(flags, flagdesc));
+		try {
+			val = get(name);
+			return true;
+		} catch (SettingNotFoundException &e) {
+			return false;
+		}
+	}
+
+	// N.B. getFlagStrNoEx() does not set val, but merely modifies it.  Thus,
+	// val must be initialized before using getFlagStrNoEx().  The intention of
+	// this is to simplify modifying a flags field from a default value.
+	bool getFlagStrNoEx(std::string name, u32 &val, FlagDesc *flagdesc)
+	{
+		try {
+			u32 flags, flagmask;
+
+			flags = getFlagStr(name, flagdesc, &flagmask);
+
+			val &= ~flagmask;
+			val |=  flags;
+
+			return true;
+		} catch (SettingNotFoundException &e) {
+			return false;
+		}
+	}
+
+	bool getFloatNoEx(std::string name, float &val)
+	{
+		try {
+			val = getFloat(name);
+			return true;
+		} catch (SettingNotFoundException &e) {
+			return false;
+		}
+	}
+
+	bool getU16NoEx(std::string name, int &val)
+	{
+		try {
+			val = getU16(name);
+			return true;
+		} catch (SettingNotFoundException &e) {
+			return false;
+		}
+	}
+
+	bool getU16NoEx(std::string name, u16 &val)
+	{
+		try {
+			val = getU16(name);
+			return true;
+		} catch (SettingNotFoundException &e) {
+			return false;
+		}
+	}
+
+	bool getS16NoEx(std::string name, int &val)
+	{
+		try {
+			val = getU16(name);
+			return true;
+		} catch (SettingNotFoundException &e) {
+			return false;
+		}
+	}
+
+	bool getS16NoEx(std::string name, s16 &val)
+	{
+		try {
+			val = getS16(name);
+			return true;
+		} catch (SettingNotFoundException &e) {
+			return false;
+		}
+	}
+
+	bool getS32NoEx(std::string name, s32 &val)
+	{
+		try {
+			val = getS32(name);
+			return true;
+		} catch (SettingNotFoundException &e) {
+			return false;
+		}
+	}
+
+	bool getV3FNoEx(std::string name, v3f &val)
+	{
+		try {
+			val = getV3F(name);
+			return true;
+		} catch (SettingNotFoundException &e) {
+			return false;
+		}
+	}
+
+	bool getV2FNoEx(std::string name, v2f &val)
+	{
+		try {
+			val = getV2F(name);
+			return true;
+		} catch (SettingNotFoundException &e) {
+			return false;
+		}
+	}
+
+	bool getU64NoEx(std::string name, u64 &val)
+	{
+		try {
+			val = getU64(name);
+			return true;
+		} catch (SettingNotFoundException &e) {
+			return false;
+		}
+	}
+
+	//////////// Set setting
+
+	// N.B. if setStruct() is used to write a non-POD aggregate type,
+	// the behavior is undefined.
+	bool setStruct(std::string name, std::string format, void *value)
+	{
+		std::string structstr;
+		if (!serializeStructToString(&structstr, format, value))
+			return false;
+
+		set(name, structstr);
+		return true;
+	}
+
+	void setFlagStr(std::string name, u32 flags,
+		FlagDesc *flagdesc, u32 flagmask)
+	{
+		set(name, writeFlagString(flags, flagdesc, flagmask));
 	}
 
 	void setBool(std::string name, bool value)
@@ -919,19 +814,8 @@ fail:
 		if(&other == this)
 			return;
 
-		for(core::map<std::string, std::string>::Iterator
-				i = other.m_settings.getIterator();
-				i.atEnd() == false; i++)
-		{
-			m_settings[i.getNode()->getKey()] = i.getNode()->getValue();
-		}
-
-		for(core::map<std::string, std::string>::Iterator
-				i = other.m_defaults.getIterator();
-				i.atEnd() == false; i++)
-		{
-			m_defaults[i.getNode()->getKey()] = i.getNode()->getValue();
-		}
+		m_settings.insert(other.m_settings.begin(), other.m_settings.end());
+		m_defaults.insert(other.m_defaults.begin(), other.m_defaults.end());
 
 		return;
 	}
@@ -944,21 +828,7 @@ fail:
 		if(&other == this)
 			return *this;
 
-		for(core::map<std::string, std::string>::Iterator
-				i = other.m_settings.getIterator();
-				i.atEnd() == false; i++)
-		{
-			m_settings.insert(i.getNode()->getKey(),
-					i.getNode()->getValue());
-		}
-
-		for(core::map<std::string, std::string>::Iterator
-				i = other.m_defaults.getIterator();
-				i.atEnd() == false; i++)
-		{
-			m_defaults.insert(i.getNode()->getKey(),
-					i.getNode()->getValue());
-		}
+		update(other);
 
 		return *this;
 
@@ -979,8 +849,8 @@ fail:
 	}
 
 private:
-	core::map<std::string, std::string> m_settings;
-	core::map<std::string, std::string> m_defaults;
+	std::map<std::string, std::string> m_settings;
+	std::map<std::string, std::string> m_defaults;
 	// All methods that access m_settings/m_defaults directly should lock this.
 	JMutex m_mutex;
 };

@@ -22,6 +22,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "irrlichttypes_extrabloated.h"
 #include "map.h"
+#include "camera.h"
+#include <set>
+#include <map>
 
 struct MapDrawControl
 {
@@ -31,7 +34,8 @@ struct MapDrawControl
 		wanted_max_blocks(0),
 		wanted_min_range(0),
 		blocks_drawn(0),
-		blocks_would_have_drawn(0)
+		blocks_would_have_drawn(0),
+		farthest_drawn(0)
 	{
 	}
 	// Overrides limits by drawing everything
@@ -46,6 +50,8 @@ struct MapDrawControl
 	u32 blocks_drawn;
 	// Number of blocks that would have been drawn in wanted_range
 	u32 blocks_would_have_drawn;
+	// Distance to the farthest block drawn
+	float farthest_drawn;
 };
 
 class Client;
@@ -81,12 +87,13 @@ public:
 		ISceneNode::drop();
 	}
 
-	void updateCamera(v3f pos, v3f dir, f32 fov)
+	void updateCamera(v3f pos, v3f dir, f32 fov, v3s16 offset)
 	{
 		JMutexAutoLock lock(m_camera_mutex);
 		m_camera_position = pos;
 		m_camera_direction = dir;
 		m_camera_fov = fov;
+		m_camera_offset = offset;
 	}
 
 	/*
@@ -120,7 +127,7 @@ public:
 	int getBackgroundBrightness(float max_d, u32 daylight_factor,
 			int oldvalue, bool *sunlight_seen_result);
 
-	void renderPostFx();
+	void renderPostFx(CameraMode cam_mode);
 
 	// For debug printing
 	virtual void PrintInfo(std::ostream &out);
@@ -128,7 +135,7 @@ public:
 	// Check if sector was drawn on last render()
 	bool sectorWasDrawn(v2s16 p)
 	{
-		return (m_last_drawn_sectors.find(p) != NULL);
+		return (m_last_drawn_sectors.find(p) != m_last_drawn_sectors.end());
 	}
 	
 private:
@@ -141,11 +148,12 @@ private:
 	v3f m_camera_position;
 	v3f m_camera_direction;
 	f32 m_camera_fov;
+	v3s16 m_camera_offset;
 	JMutex m_camera_mutex;
 
-	core::map<v3s16, MapBlock*> m_drawlist;
+	std::map<v3s16, MapBlock*> m_drawlist;
 	
-	core::map<v2s16, bool> m_last_drawn_sectors;
+	std::set<v2s16> m_last_drawn_sectors;
 };
 
 #endif

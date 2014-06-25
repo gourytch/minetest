@@ -29,12 +29,14 @@ Clouds::Clouds(
 		scene::ISceneNode* parent,
 		scene::ISceneManager* mgr,
 		s32 id,
-		u32 seed
+		u32 seed,
+		s16 cloudheight
 ):
 	scene::ISceneNode(parent, mgr, id),
 	m_seed(seed),
 	m_camera_pos(0,0),
-	m_time(0)
+	m_time(0),
+	m_camera_offset(0,0,0)
 {
 	m_material.setFlag(video::EMF_LIGHTING, false);
 	//m_material.setFlag(video::EMF_BACK_FACE_CULLING, false);
@@ -45,7 +47,8 @@ Clouds::Clouds(
 	//m_material.MaterialType = video::EMT_TRANSPARENT_VERTEX_ALPHA;
 	m_material.MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL;
 
-	m_cloud_y = BS * g_settings->getS16("cloud_height");
+	m_cloud_y = BS * (cloudheight ? cloudheight :
+				g_settings->getS16("cloud_height"));
 
 	m_box = core::aabbox3d<f32>(-BS*1000000,m_cloud_y-BS,-BS*1000000,
 			BS*1000000,m_cloud_y+BS,BS*1000000);
@@ -316,6 +319,7 @@ void Clouds::render()
 			}
 
 			v3f pos(p0.X, m_cloud_y, p0.Y);
+			pos -= intToFloat(m_camera_offset, BS);
 
 			for(u16 i=0; i<4; i++)
 				v[i].Pos += pos;

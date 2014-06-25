@@ -26,10 +26,13 @@
 */
 
 #ifndef JTHREAD_H
-
 #define JTHREAD_H
 
-#include "jmutex.h"
+#if __cplusplus >= 201103L
+#include <atomic>
+#endif
+
+#include "jthread/jmutex.h"
 
 #define ERR_JTHREAD_CANTINITMUTEX						-1
 #define ERR_JTHREAD_CANTSTARTTHREAD						-2
@@ -43,10 +46,23 @@ public:
 	JThread();
 	virtual ~JThread();
 	int Start();
+	inline void Stop()
+		{ requeststop = true; }
 	int Kill();
 	virtual void *Thread() = 0;
-	bool IsRunning();
+	inline bool IsRunning()
+		{ return running; }
+	inline bool StopRequested()
+		{ return requeststop; }
 	void *GetReturnValue();
+	bool IsSameThread();
+
+	/*
+	 * Wait for thread to finish
+	 * Note: this does not stop a thread you have to do this on your own
+	 * WARNING: never ever call this on a thread not started or already killed!
+	 */
+	void Wait();
 protected:
 	void ThreadStarted();
 private:
@@ -62,15 +78,39 @@ private:
 	HANDLE threadhandle;
 #else // pthread type threads
 	static void *TheThread(void *param);
-	
+
 	pthread_t threadid;
+
+	/*
+	 * reading and writing bool values is atomic on all relevant architectures
+	 * ( x86 + arm ). No need to waste time for locking here.
+	 * once C++11 is supported we can tell compiler to handle cpu caches correct
+	 * too. This should cause additional improvement (and silence thread
+	 * concurrency check tools.
+	 */
+#if __cplusplus >= 201103L
+	std::atomic_bool started;
+#else
+	bool started;
+#endif
 #endif // WIN32
 	void *retval;
+	/*
+	 * reading and writing bool values is atomic on all relevant architectures
+	 * ( x86 + arm ). No need to waste time for locking here.
+	 * once C++11 is supported we can tell compiler to handle cpu caches correct
+	 * too. This should cause additional improvement (and silence thread
+	 * concurrency check tools.
+	 */
+#if __cplusplus >= 201103L
+	std::atomic_bool running;
+	std::atomic_bool requeststop;
+#else
 	bool running;
-	
-	JMutex runningmutex;
+	bool requeststop;
+#endif
+
 	JMutex continuemutex,continuemutex2;
-	bool mutexinit;
 };
 
 #endif // JTHREAD_H

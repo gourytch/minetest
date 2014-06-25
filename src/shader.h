@@ -4,16 +4,16 @@ Copyright (C) 2013 celeron55, Perttu Ahola <celeron55@gmail.com>
 Copyright (C) 2013 Kahrl <kahrl@gmx.net>
 
 This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation; either version 2.1 of the License, or
 (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU General Public License along
+You should have received a copy of the GNU Lesser General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
@@ -46,9 +46,16 @@ std::string getShaderPath(const std::string &name_of_shader,
 struct ShaderInfo
 {
 	std::string name;
+	video::E_MATERIAL_TYPE base_material;
 	video::E_MATERIAL_TYPE material;
+	u8 drawtype;
+	u8 material_type;
+	s32 user_data;
 
-	ShaderInfo(): name(""), material(video::EMT_SOLID) {}
+	ShaderInfo(): name(""), base_material(video::EMT_SOLID),
+		material(video::EMT_SOLID),
+		drawtype(0), material_type(0) {}
+	virtual ~ShaderInfo() {}
 };
 
 /*
@@ -76,11 +83,11 @@ class IShaderSource
 public:
 	IShaderSource(){}
 	virtual ~IShaderSource(){}
-	virtual u32 getShaderId(const std::string &name){return 0;}
-	virtual u32 getShaderIdDirect(const std::string &name){return 0;}
-	virtual std::string getShaderName(u32 id){return "";}
-	virtual ShaderInfo getShader(u32 id){return ShaderInfo();}
-	virtual ShaderInfo getShader(const std::string &name){return ShaderInfo();}
+	virtual u32 getShaderIdDirect(const std::string &name,
+		const u8 material_type, const u8 drawtype){return 0;}
+	virtual ShaderInfo getShaderInfo(u32 id){return ShaderInfo();}
+	virtual u32 getShader(const std::string &name,
+		const u8 material_type, const u8 drawtype){return 0;}
 };
 
 class IWritableShaderSource : public IShaderSource
@@ -88,11 +95,11 @@ class IWritableShaderSource : public IShaderSource
 public:
 	IWritableShaderSource(){}
 	virtual ~IWritableShaderSource(){}
-	virtual u32 getShaderId(const std::string &name){return 0;}
-	virtual u32 getShaderIdDirect(const std::string &name){return 0;}
-	virtual std::string getShaderName(u32 id){return "";}
-	virtual ShaderInfo getShader(u32 id){return ShaderInfo();}
-	virtual ShaderInfo getShader(const std::string &name){return ShaderInfo();}
+	virtual u32 getShaderIdDirect(const std::string &name,
+		const u8 material_type, const u8 drawtype){return 0;}
+	virtual ShaderInfo getShaderInfo(u32 id){return ShaderInfo();}
+	virtual u32 getShader(const std::string &name,
+		const u8 material_type, const u8 drawtype){return 0;}
 
 	virtual void processQueue()=0;
 	virtual void insertSourceShader(const std::string &name_of_shader,

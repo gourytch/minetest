@@ -197,6 +197,7 @@ public:
 		else
 			data = NULL;
 		refcount = new unsigned int;
+		memset(data,0,sizeof(T)*m_size);
 		(*refcount) = 1;
 	}
 	SharedBuffer(const SharedBuffer &buffer)
@@ -257,7 +258,7 @@ public:
 	}
 	T & operator[](unsigned int i) const
 	{
-		//assert(i < m_size)
+		assert(i < m_size);
 		return data[i];
 	}
 	T * operator*() const

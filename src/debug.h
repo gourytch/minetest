@@ -20,26 +20,24 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #ifndef DEBUG_HEADER
 #define DEBUG_HEADER
 
-#include <stdio.h>
-#include <jmutex.h>
-#include <jmutexautolock.h>
 #include <iostream>
-#include "irrlichttypes.h"
-#include <irrMap.h>
-#include "threads.h"
+#include <exception>
 #include "gettime.h"
-#include "exceptions.h"
 
-#ifdef _WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 	#define WIN32_LEAN_AND_MEAN
 	#ifndef _WIN32_WINNT
-		#define _WIN32_WINNT 0x0500
+		#define _WIN32_WINNT 0x0501
 	#endif
 	#include <windows.h>
 	#ifdef _MSC_VER
 		#include <eh.h>
 	#endif
+	#define __NORETURN __declspec(noreturn)
+	#define __FUNCTION_NAME __FUNCTION__
 #else
+	#define __NORETURN __attribute__ ((__noreturn__))
+	#define __FUNCTION_NAME __PRETTY_FUNCTION__
 #endif
 
 // Whether to catch all std::exceptions.
@@ -57,64 +55,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #define DTIME (getTimestamp()+": ")
 
-#define DEBUGSTREAM_COUNT 2
-
-extern FILE *g_debugstreams[DEBUGSTREAM_COUNT];
-
 extern void debugstreams_init(bool disable_stderr, const char *filename);
 extern void debugstreams_deinit();
-
-#define DEBUGPRINT(...)\
-{\
-	for(int i=0; i<DEBUGSTREAM_COUNT; i++)\
-	{\
-		if(g_debugstreams[i] != NULL){\
-			fprintf(g_debugstreams[i], __VA_ARGS__);\
-			fflush(g_debugstreams[i]);\
-		}\
-	}\
-}
-
-class Debugbuf : public std::streambuf
-{
-public:
-	Debugbuf(bool disable_stderr)
-	{
-		m_disable_stderr = disable_stderr;
-	}
-
-	int overflow(int c)
-	{
-		for(int i=0; i<DEBUGSTREAM_COUNT; i++)
-		{
-			if(g_debugstreams[i] == stderr && m_disable_stderr)
-				continue;
-			if(g_debugstreams[i] != NULL)
-				(void)fwrite(&c, 1, 1, g_debugstreams[i]);
-			//TODO: Is this slow?
-			fflush(g_debugstreams[i]);
-		}
-		
-		return c;
-	}
-	std::streamsize xsputn(const char *s, std::streamsize n)
-	{
-		for(int i=0; i<DEBUGSTREAM_COUNT; i++)
-		{
-			if(g_debugstreams[i] == stderr && m_disable_stderr)
-				continue;
-			if(g_debugstreams[i] != NULL)
-				(void)fwrite(s, 1, n, g_debugstreams[i]);
-			//TODO: Is this slow?
-			fflush(g_debugstreams[i]);
-		}
-
-		return n;
-	}
-	
-private:
-	bool m_disable_stderr;
-};
 
 // This is used to redirect output to /dev/null
 class Nullstream : public std::ostream {
@@ -126,10 +68,17 @@ public:
 private:
 };
 
-extern Debugbuf debugbuf;
 extern std::ostream dstream;
 extern std::ostream dstream_no_stderr;
 extern Nullstream dummyout;
+
+/*
+	Include assert.h and immediately undef assert so that it can't override
+	our assert later on. leveldb/slice.h is a notable offender.
+*/
+
+#include <assert.h>
+#undef assert
 
 /*
 	Assert
@@ -153,25 +102,11 @@ __NORETURN extern void assert_fail(
 #define DEBUG_STACK_SIZE 50
 #define DEBUG_STACK_TEXT_SIZE 300
 
-struct DebugStack
-{
-	DebugStack(threadid_t id);
-	void print(FILE *file, bool everything);
-	void print(std::ostream &os, bool everything);
-	
-	threadid_t threadid;
-	char stack[DEBUG_STACK_SIZE][DEBUG_STACK_TEXT_SIZE];
-	int stack_i; // Points to the lowest empty position
-	int stack_max_i; // Highest i that was seen
-};
-
-extern core::map<threadid_t, DebugStack*> g_debug_stacks;
-extern JMutex g_debug_stacks_mutex;
-
 extern void debug_stacks_init();
 extern void debug_stacks_print_to(std::ostream &os);
 extern void debug_stacks_print();
 
+struct DebugStack;
 class DebugStacker
 {
 public:
@@ -193,57 +128,6 @@ private:
 	DebugStacker __debug_stacker(__buf);
 
 /*
-	Packet counter
-*/
-
-class PacketCounter
-{
-public:
-	PacketCounter()
-	{
-	}
-
-	void add(u16 command)
-	{
-		core::map<u16, u16>::Node *n = m_packets.find(command);
-		if(n == NULL)
-		{
-			m_packets[command] = 1;
-		}
-		else
-		{
-			n->setValue(n->getValue()+1);
-		}
-	}
-
-	void clear()
-	{
-		for(core::map<u16, u16>::Iterator
-				i = m_packets.getIterator();
-				i.atEnd() == false; i++)
-		{
-			i.getNode()->setValue(0);
-		}
-	}
-
-	void print(std::ostream &o)
-	{
-		for(core::map<u16, u16>::Iterator
-				i = m_packets.getIterator();
-				i.atEnd() == false; i++)
-		{
-			o<<"cmd "<<i.getNode()->getKey()
-					<<" count "<<i.getNode()->getValue()
-					<<std::endl;
-		}
-	}
-
-private:
-	// command, count
-	core::map<u16, u16> m_packets;
-};
-
-/*
 	These should be put into every thread
 */
 
@@ -258,14 +142,6 @@ private:
 	#ifdef _WIN32 // Windows
 		#ifdef _MSC_VER // MSVC
 void se_trans_func(unsigned int, EXCEPTION_POINTERS*);
-
-class FatalSystemException : public BaseException
-{
-public:
-	FatalSystemException(const char *s):
-		BaseException(s)
-	{}
-};
 			#define BEGIN_DEBUG_EXCEPTION_HANDLER \
 				BEGIN_PORTABLE_DEBUG_EXCEPTION_HANDLER\
 				_set_se_translator(se_trans_func);

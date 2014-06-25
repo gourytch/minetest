@@ -1,6 +1,7 @@
 /*
 Minetest
 Copyright (C) 2010-2013 celeron55, Perttu Ahola <celeron55@gmail.com>
+Copyright (C) 2010-2013 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -67,12 +68,28 @@ struct NoiseParams {
 	int seed;
 	int octaves;
 	float persist;
+
+	NoiseParams() {}
+
+	NoiseParams(float offset_, float scale_, v3f spread_,
+		int seed_, int octaves_, float persist_)
+	{
+		offset  = offset_;
+		scale   = scale_;
+		spread  = spread_;
+		seed    = seed_;
+		octaves = octaves_;
+		persist = persist_;
+	}
 };
 
 
 // Convenience macros for getting/setting NoiseParams in Settings
-#define getNoiseParams(x) getStruct<NoiseParams>((x), "f,f,v3,s32,s32,f")
-#define setNoiseParams(x, y) setStruct((x), "f,f,v3,s32,s32,f", (y))
+
+#define NOISEPARAMS_FMT_STR "f,f,v3,s32,s32,f"
+
+#define getNoiseParams(x, y) getStruct((x), NOISEPARAMS_FMT_STR, &(y), sizeof(y))
+#define setNoiseParams(x, y) setStruct((x), NOISEPARAMS_FMT_STR, &(y))
 
 class Noise {
 public:
@@ -87,9 +104,9 @@ public:
 
 	Noise(NoiseParams *np, int seed, int sx, int sy);
 	Noise(NoiseParams *np, int seed, int sx, int sy, int sz);
-	~Noise();
+	virtual ~Noise();
 
-	void init(NoiseParams *np, int seed, int sx, int sy, int sz);
+	virtual void init(NoiseParams *np, int seed, int sx, int sy, int sz);
 	void setSize(int sx, int sy);
 	void setSize(int sx, int sy, int sz);
 	void setSpreadFactor(v3f spread);
@@ -105,6 +122,7 @@ public:
 		float step_x, float step_y, float step_z,
 		int seed);
 	float *perlinMap2D(float x, float y);
+	float *perlinMap2DModulated(float x, float y, float *persist_map);
 	float *perlinMap3D(float x, float y, float z);
 	void transformNoiseMap();
 };
@@ -157,7 +175,7 @@ inline float easeCurve(float t) {
 		(s) + (np)->seed, (np)->octaves, (np)->persist))
 
 #define NoisePerlin3D(np, x, y, z, s) ((np)->offset + (np)->scale * \
-		noise2d_perlin((float)(x) / (np)->spread.X, (float)(y) / (np)->spread.Y, \
+		noise3d_perlin((float)(x) / (np)->spread.X, (float)(y) / (np)->spread.Y, \
 		(float)(z) / (np)->spread.Z, (s) + (np)->seed, (np)->octaves, (np)->persist))
 
 #endif

@@ -16,7 +16,7 @@ See the README.txt in it.
 Further documentation
 ----------------------
 - Website: http://minetest.net/
-- Wiki: http://wiki.minetest.com/
+- Wiki: http://wiki.minetest.net/
 - Developer wiki: http://dev.minetest.net/
 - Forum: http://forum.minetest.net/
 - Github: https://github.com/minetest/minetest/
@@ -29,13 +29,17 @@ This game is not finished
 
 Default Controls
 -----------------
-- WASD: Move
-- Space: Jump
-- E: Go down
-- Shift: Sneak
-- Q: Drop item
-- I: Open inventory
-- Mouse: Turn/look
+- WASD: move
+- Space: jump/climb
+- Shift: sneak/go down
+- Q: drop item
+- I: inventory
+- Mouse: turn/look
+- Mouse left: dig/punch
+- Mouse right: place/use
+- Mouse wheel: select item
+- Esc: pause menu
+- T: chat
 - Settable in the configuration file, see the section below.
 
 Paths
@@ -80,7 +84,7 @@ Compiling on GNU/Linux:
 -----------------------
 
 Install dependencies. Here's an example for Debian/Ubuntu:
-$ apt-get install build-essential libirrlicht-dev cmake libbz2-dev libpng12-dev libjpeg8-dev libxxf86vm-dev libgl1-mesa-dev libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev
+$ apt-get install build-essential libirrlicht-dev cmake libbz2-dev libpng12-dev libjpeg8-dev libxxf86vm-dev libgl1-mesa-dev libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libcurl4-gnutls-dev libfreetype6-dev
 
 Download source, extract (this is the URL to the latest of source repository, which might not work at all times):
 $ wget https://github.com/minetest/minetest/tarball/master -O master.tar.gz
@@ -89,8 +93,8 @@ $ cd minetest-minetest-286edd4 (or similar)
 
 Download minetest_game (otherwise only the "Minimal development test" game is available)
 $ cd games/
-$ wget https://github.com/minetest/minetest_game/tarball/master -O master.tar.gz
-$ tar xf master.tar.gz
+$ wget https://github.com/minetest/minetest_game/tarball/master -O minetest_game.tar.gz
+$ tar xf minetest_game.tar.gz
 $ mv minetest-minetest_game-* minetest_game
 $ cd ..
 
@@ -107,6 +111,74 @@ $ ./minetest
 - You can build a bare server or a bare client by specifying -DBUILD_CLIENT=0 or -DBUILD_SERVER=0
 - You can select between Release and Debug build by -DCMAKE_BUILD_TYPE=<Debug or Release>
   - Debug build is slower, but gives much more useful output in a debugger
+- If you build a bare server, you don't need to have Irrlicht installed. In that case use -DIRRLICHT_SOURCE_DIR=/the/irrlicht/source
+
+CMake options
+-------------
+General options:
+
+BUILD_CLIENT        - Build Minetest client
+BUILD_SERVER        - Build Minetest server
+CMAKE_BUILD_TYPE    - Type of build (Release vs. Debug)
+    Release         - Release build
+    Debug           - Debug build
+    RelWithDebInfo  - Release build with Debug information
+    MinSizeRel      - Release build with -Os passed to compiler to make executable as small as possible
+ENABLE_CURL         - Build with cURL; Enables use of online mod repo, public serverlist and remote media fetching via http
+ENABLE_FREETYPE     - Build with Freetype2; Allows using TTF fonts
+ENABLE_GETTEXT      - Build with Gettext; Allows using translations
+ENABLE_GLES         - Search for Open GLES headers & libraries and use them
+ENABLE_LEVELDB      - Build with LevelDB; Enables use of LevelDB, which is much faster than SQLite, as map backend
+ENABLE_SOUND        - Build with OpenAL, libogg & libvorbis; in-game Sounds
+DISABLE_LUAJIT      - Do not search for LuaJIT headers & library
+RUN_IN_PLACE        - Create a portable install (worlds, settings etc. in current directory)
+USE_GPROF           - Enable profiling using GProf
+VERSION_EXTRA       - Text to append to version (e.g. VERSION_EXTRA=foobar -> Minetest 0.4.9-foobar)
+
+Library specific options:
+
+BZIP2_INCLUDE_DIR               - Linux only; directory where bzlib.h is located
+BZIP2_LIBRARY                   - Linux only; path to libbz2.a/libbz2.so
+CURL_DLL                        - Only if building with cURL on Windows; path to libcurl.dll
+CURL_INCLUDE_DIR                - Only if building with cURL; directory where curl.h is located
+CURL_LIBRARY                    - Only if building with cURL; path to libcurl.a/libcurl.so/libcurl.lib
+EGL_INCLUDE_DIR                 - Only if building with GLES; directory that contains egl.h
+EGL_egl_LIBRARY                 - Only if building with GLES; path to libEGL.a/libEGL.so
+FREETYPE_INCLUDE_DIR_freetype2  - Only if building with Freetype2; directory that contains an freetype directory with files such as ftimage.h in it
+FREETYPE_INCLUDE_DIR_ft2build   - Only if building with Freetype2; directory that contains ft2build.h
+FREETYPE_LIBRARY                - Only if building with Freetype2; path to libfreetype.a/libfreetype.so/freetype.lib
+GETTEXT_DLL                     - Only when building with Gettext on Windows; path to libintl3.dll
+GETTEXT_ICONV_DLL               - Only when building with Gettext on Windows; path to libiconv2.dll
+GETTEXT_INCLUDE_DIR             - Only when building with Gettext; directory that contains iconv.h
+GETTEXT_LIBRARY                 - Only when building with Gettext on Windows; path to libintl.dll.a
+GETTEXT_MSGFMT                  - Only when building with Gettext; path to msgfmt/msgfmt.exe
+IRRLICHT_DLL                    - path to Irrlicht.dll
+IRRLICHT_INCLUDE_DIR            - directory that contains IrrCompileConfig.h
+IRRLICHT_LIBRARY                - path to libIrrlicht.a/libIrrlicht.so/libIrrlicht.dll.a
+LEVELDB_INCLUDE_DIR             - Only when building with LevelDB; directory that contains db.h
+LEVELDB_LIBRARY                 - Only when building with LevelDB; path to libleveldb.a/libleveldb.so/libleveldb.dll
+LUA_INCLUDE_DIR                 - Only if you want to use LuaJIT; directory where luajit.h is located
+LUA_LIBRARY                     - Only if you want to use LuaJIT; path to libluajit.a/libluajit.so
+MINGWM10_DLL                    - Only if compiling with MinGW; path to mingwm10.dll
+OGG_DLL                         - Only if building with sound on Windows; path to libogg.dll
+OGG_INCLUDE_DIR                 - Only if building with sound; directory that contains an ogg directory which contains ogg.h
+OGG_LIBRARY                     - Only if building with sound; path to libogg.a/libogg.so/libogg.dll.a
+OPENAL_DLL                      - Only if building with sound on Windows; path to OpenAL32.dll
+OPENAL_INCLUDE_DIR              - Only if building with sound; directory where al.h is located
+OPENAL_LIBRARY                  - Only if building with sound; path to libopenal.a/libopenal.so/OpenAL32.lib
+OPENGLES2_INCLUDE_DIR           - Only if building with GLES; directory that contains gl2.h
+OPENGLES2_gl_LIBRARY            - Only if building with GLES; path to libGLESv2.a/libGLESv2.so
+SQLITE3_INCLUDE_DIR             - Only if you want to use SQLite from your OS; directory that contains sqlite3.h
+SQLITE3_LIBRARY                 - Only if you want to use the SQLite from your OS; path to libsqlite3.a/libsqlite3.so
+VORBISFILE_DLL                  - Only if building with sound on Windows; path to libvorbisfile-3.dll
+VORBISFILE_LIBRARY              - Only if building with sound; path to libvorbisfile.a/libvorbisfile.so/libvorbisfile.dll.a
+VORBIS_DLL                      - Only if building with sound on Windows; path to libvorbis-0.dll
+VORBIS_INCLUDE_DIR              - Only if building with sound; directory that contains a directory vorbis with vorbisenc.h inside
+VORBIS_LIBRARY                  - Only if building with sound; path to libvorbis.a/libvorbis.so/libvorbis.dll.a
+XXF86VM_LIBRARY                 - Only on Linux; path to libXXf86vm.a/libXXf86vm.so
+ZLIB_DLL                        - Only on Windows; path to zlibwapi.dll
+ZLIB_INCLUDE_DIR                - directory where zlib.h is located
+ZLIB_LIBRARY                    - path to libz.a/libz.so/zlibwapi.lib
 
 Compiling on Windows:
 ---------------------
@@ -254,6 +326,20 @@ distribution.
 Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
 http://creativecommons.org/licenses/by-sa/3.0/
 
+Authors of media files
+-----------------------
+Everything not listed in here:
+Copyright (C) 2010-2012 celeron55, Perttu Ahola <celeron55@gmail.com>
+
+BlockMen:
+  textures/base/pack/menuheader.png
+
+erlehmann:
+  misc/minetest-icon-24x24.png
+  misc/minetest-icon.ico
+  misc/minetest-icon.svg
+  textures/base/pack/logo.png
+
 License of Minetest source code
 -------------------------------
 
@@ -268,7 +354,7 @@ the Free Software Foundation; either version 2.1 of the License, or
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
@@ -363,17 +449,31 @@ DejaVu Sans Mono:
   Fonts are (c) Bitstream (see below). DejaVu changes are in public domain.
   Glyphs imported from Arev fonts are (c) Tavmjong Bah (see below)
 
-  Bitstream Vera Fonts Copyright:
+Bitstream Vera Fonts Copyright:
 
   Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream Vera is
   a trademark of Bitstream, Inc.
 
-  Arev Fonts Copyright:
+Arev Fonts Copyright:
 
   Copyright (c) 2006 by Tavmjong Bah. All Rights Reserved.
 
-  Liberation Fonts Copyright:
+Liberation Fonts Copyright:
 
   Copyright (c) 2007 Red Hat, Inc. All rights reserved. LIBERATION is a trademark of Red Hat, Inc.
 
+DroidSansFallback:
 
+  Copyright (C) 2008 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.

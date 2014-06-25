@@ -3,727 +3,1085 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: minetest\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-01-30 20:25+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2013-11-23 17:37+0100\n"
+"PO-Revision-Date: 2013-12-18 21:28+0200\n"
+"Last-Translator: Jabo Babo <bb7b@gmx.de>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: et\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 1.7-dev\n"
 
-#: src/guiConfigureWorld.cpp:125
-msgid ""
-"Warning: Some mods are not configured yet.\n"
-"They will be enabled by default when you save the configuration.  "
-msgstr ""
+#: builtin/gamemgr.lua:23
+#, fuzzy
+msgid "Game Name"
+msgstr "Mäng"
 
-#: src/guiConfigureWorld.cpp:144
-msgid ""
-"Warning: Some configured mods are missing.\n"
-"Their setting will be removed when you save the configuration.  "
-msgstr ""
-
-#: src/guiConfigureWorld.cpp:208
-msgid "enabled"
-msgstr ""
-
-#: src/guiConfigureWorld.cpp:215
-msgid "Enable All"
-msgstr ""
-
-#: src/guiConfigureWorld.cpp:222
-msgid "Disable All"
-msgstr ""
-
-#: src/guiConfigureWorld.cpp:228
-msgid "depends on:"
-msgstr ""
-
-#: src/guiConfigureWorld.cpp:240
-msgid "is required by:"
-msgstr ""
-
-#: src/guiConfigureWorld.cpp:262 src/guiCreateWorld.cpp:165
-#: src/guiKeyChangeMenu.cpp:179 src/keycode.cpp:223
-msgid "Cancel"
-msgstr ""
-
-#: src/guiConfigureWorld.cpp:268 src/guiKeyChangeMenu.cpp:173
-msgid "Save"
-msgstr ""
-
-#: src/guiConfigureWorld.cpp:394
-msgid "Configuration saved.  "
-msgstr ""
-
-#: src/guiConfigureWorld.cpp:402
-msgid "Warning: Configuration not consistent.  "
-msgstr ""
-
-#: src/guiConfirmMenu.cpp:120
-msgid "Yes"
-msgstr ""
-
-#: src/guiConfirmMenu.cpp:126
-msgid "No"
-msgstr ""
-
-#: src/guiCreateWorld.cpp:116
-msgid "World name"
-msgstr ""
-
-#: src/guiCreateWorld.cpp:135
-msgid "Game"
-msgstr ""
-
-#: src/guiCreateWorld.cpp:159
+#: builtin/gamemgr.lua:25 builtin/mainmenu.lua:310
 msgid "Create"
+msgstr "Loo"
+
+#: builtin/gamemgr.lua:26 builtin/mainmenu.lua:311 builtin/modmgr.lua:331
+#: builtin/modmgr.lua:448 src/guiKeyChangeMenu.cpp:195 src/keycode.cpp:223
+msgid "Cancel"
+msgstr "Tühista"
+
+#: builtin/gamemgr.lua:118
+msgid "Gamemgr: Unable to copy mod \"$1\" to game \"$2\""
 msgstr ""
 
-#: src/guiDeathScreen.cpp:96
-msgid "You died."
+#: builtin/gamemgr.lua:216
+msgid "GAMES"
+msgstr "MÄNGUD"
+
+#: builtin/gamemgr.lua:217 builtin/mainmenu.lua:1076
+msgid "Games"
+msgstr "Mängud"
+
+#: builtin/gamemgr.lua:234
+msgid "Mods:"
 msgstr ""
 
-#: src/guiDeathScreen.cpp:104
-msgid "Respawn"
+#: builtin/gamemgr.lua:235
+#, fuzzy
+msgid "edit game"
+msgstr "Muuda mängu"
+
+#: builtin/gamemgr.lua:238
+msgid "new game"
+msgstr "uus mängu"
+
+#: builtin/gamemgr.lua:248
+msgid "EDIT GAME"
+msgstr "MUUDA MÄNGU"
+
+#: builtin/gamemgr.lua:269
+#, fuzzy
+msgid "Remove selected mod"
+msgstr "Eemalda valitud muutus"
+
+#: builtin/gamemgr.lua:272
+#, fuzzy
+msgid "<<-- Add mod"
+msgstr "<<-- Lisama muutus"
+
+#: builtin/mainmenu.lua:158
+msgid "Ok"
+msgstr "kinnitama"
+
+#: builtin/mainmenu.lua:297
+msgid "World name"
+msgstr "Maailma nimi"
+
+#: builtin/mainmenu.lua:300
+msgid "Seed"
 msgstr ""
 
-#: src/guiFormSpecMenu.cpp:572
-msgid "Left click: Move all items, Right click: Move single item"
+#: builtin/mainmenu.lua:303
+#, fuzzy
+msgid "Mapgen"
+msgstr "Põlvkonna kaardid"
+
+#: builtin/mainmenu.lua:306
+msgid "Game"
+msgstr "Mäng"
+
+#: builtin/mainmenu.lua:319
+#, fuzzy
+msgid "Delete World \"$1\"?"
+msgstr "Kustuta maailm: \"$1\"?"
+
+#: builtin/mainmenu.lua:320 builtin/modmgr.lua:877
+msgid "Yes"
+msgstr "Jah"
+
+#: builtin/mainmenu.lua:321
+msgid "No"
+msgstr "Ei"
+
+#: builtin/mainmenu.lua:364
+#, fuzzy
+msgid "A world named \"$1\" already exists"
+msgstr "Maailma loomine ebaõnnestus: Samanimeline maailm on juba olemas"
+
+#: builtin/mainmenu.lua:381
+msgid "No worldname given or no game selected"
+msgstr "No nimi või no mäng valitud"
+
+#: builtin/mainmenu.lua:650
+msgid "To enable shaders the OpenGL driver needs to be used."
+msgstr "Aktiveerimiseks varjud, nad vajavad OpenGL draiver."
+
+#: builtin/mainmenu.lua:818
+msgid "CLIENT"
 msgstr ""
 
-#: src/guiFormSpecMenu.cpp:597 src/guiMessageMenu.cpp:109
-#: src/guiTextInputMenu.cpp:123
-msgid "Proceed"
-msgstr ""
+#: builtin/mainmenu.lua:819
+msgid "Favorites:"
+msgstr "Lemmikud:"
 
-#: src/guiKeyChangeMenu.cpp:114
-msgid "Keybindings. (If this menu screws up, remove stuff from minetest.conf)"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:151
-msgid "\"Use\" = climb down"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:164
-msgid "Double tap \"jump\" to toggle fly"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:269
-msgid "Key already in use"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:347
-msgid "press key"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:372
-msgid "Forward"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:373
-msgid "Backward"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:374 src/keycode.cpp:228
-msgid "Left"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:375 src/keycode.cpp:228
-msgid "Right"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:376
-msgid "Use"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:377
-msgid "Jump"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:378
-msgid "Sneak"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:379
-msgid "Drop"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:380
-msgid "Inventory"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:381
-msgid "Chat"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:382
-msgid "Command"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:383
-msgid "Console"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:384
-msgid "Toggle fly"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:385
-msgid "Toggle fast"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:386
-msgid "Toggle noclip"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:387
-msgid "Range select"
-msgstr ""
-
-#: src/guiKeyChangeMenu.cpp:388
-msgid "Print stacks"
-msgstr ""
-
-#: src/guiMainMenu.cpp:55
-msgid "Cannot create world: Name contains invalid characters"
-msgstr ""
-
-#: src/guiMainMenu.cpp:64
-msgid "Cannot create world: A world by this name already exists"
-msgstr ""
-
-#: src/guiMainMenu.cpp:245
-msgid "Singleplayer"
-msgstr ""
-
-#: src/guiMainMenu.cpp:246
-msgid "Multiplayer"
-msgstr ""
-
-#: src/guiMainMenu.cpp:247
-msgid "Advanced"
-msgstr ""
-
-#: src/guiMainMenu.cpp:248
-msgid "Settings"
-msgstr ""
-
-#: src/guiMainMenu.cpp:249
-msgid "Credits"
-msgstr ""
-
-#: src/guiMainMenu.cpp:280
-msgid "Select World:"
-msgstr ""
-
-#: src/guiMainMenu.cpp:302 src/guiMainMenu.cpp:449 src/keycode.cpp:229
-msgid "Delete"
-msgstr ""
-
-#: src/guiMainMenu.cpp:309
-msgid "New"
-msgstr ""
-
-#: src/guiMainMenu.cpp:317
-msgid "Configure"
-msgstr ""
-
-#: src/guiMainMenu.cpp:332 src/keycode.cpp:248
-msgid "Play"
-msgstr ""
-
-#: src/guiMainMenu.cpp:343 src/guiMainMenu.cpp:557
-msgid "Creative Mode"
-msgstr ""
-
-#: src/guiMainMenu.cpp:349 src/guiMainMenu.cpp:563
-msgid "Enable Damage"
-msgstr ""
-
-#: src/guiMainMenu.cpp:369 src/guiMainMenu.cpp:479
-msgid "Name/Password"
-msgstr ""
-
-#: src/guiMainMenu.cpp:408 src/guiMainMenu.cpp:506
+#: builtin/mainmenu.lua:820
 msgid "Address/Port"
-msgstr ""
+msgstr "IP/Port"
 
-#: src/guiMainMenu.cpp:435 src/guiMainMenu.cpp:1075
-msgid "Show Public"
-msgstr ""
+#: builtin/mainmenu.lua:821
+msgid "Name/Password"
+msgstr "Nimi/Parool"
 
-#: src/guiMainMenu.cpp:439 src/guiMainMenu.cpp:1083
-msgid "Show Favorites"
-msgstr ""
+#: builtin/mainmenu.lua:824
+#, fuzzy
+msgid "Public Serverlist"
+msgstr "Avatud serverite nimekiri:"
 
-#: src/guiMainMenu.cpp:459
+#: builtin/mainmenu.lua:829 builtin/mainmenu.lua:874 builtin/mainmenu.lua:937
+#: src/keycode.cpp:229
+msgid "Delete"
+msgstr "Kustuta"
+
+#: builtin/mainmenu.lua:833
 msgid "Connect"
+msgstr "Liitu"
+
+#: builtin/mainmenu.lua:875 builtin/mainmenu.lua:938
+msgid "New"
+msgstr "Uus"
+
+#: builtin/mainmenu.lua:876 builtin/mainmenu.lua:939
+msgid "Configure"
+msgstr "Konfigureeri"
+
+#: builtin/mainmenu.lua:877
+msgid "Start Game"
+msgstr "Alusta mängu"
+
+#: builtin/mainmenu.lua:878 builtin/mainmenu.lua:941
+msgid "Select World:"
+msgstr "Vali maailm:"
+
+#: builtin/mainmenu.lua:879
+msgid "START SERVER"
 msgstr ""
 
-#: src/guiMainMenu.cpp:529
-msgid "Leave address blank to start a local server."
+#: builtin/mainmenu.lua:880 builtin/mainmenu.lua:943
+msgid "Creative Mode"
+msgstr "Kujunduslik mängumood"
+
+#: builtin/mainmenu.lua:882 builtin/mainmenu.lua:945
+msgid "Enable Damage"
+msgstr "Lülita valu sisse"
+
+#: builtin/mainmenu.lua:884
+msgid "Public"
+msgstr "Avalik"
+
+#: builtin/mainmenu.lua:886
+msgid "Name"
+msgstr "Nimi"
+
+#: builtin/mainmenu.lua:888
+msgid "Password"
+msgstr "Parool"
+
+#: builtin/mainmenu.lua:889
+msgid "Server Port"
 msgstr ""
 
-#: src/guiMainMenu.cpp:538
-msgid "Start Game / Connect"
-msgstr ""
+#: builtin/mainmenu.lua:899
+msgid "SETTINGS"
+msgstr "Seaded"
 
-#: src/guiMainMenu.cpp:570 src/guiMainMenu.cpp:1006
-msgid "Delete world"
-msgstr ""
-
-#: src/guiMainMenu.cpp:577
-msgid "Create world"
-msgstr ""
-
-#: src/guiMainMenu.cpp:611
+#: builtin/mainmenu.lua:900
 msgid "Fancy trees"
-msgstr ""
+msgstr "Uhked puud"
 
-#: src/guiMainMenu.cpp:617
+#: builtin/mainmenu.lua:902
 msgid "Smooth Lighting"
-msgstr ""
+msgstr "Ilus valgustus"
 
-#: src/guiMainMenu.cpp:623
+#: builtin/mainmenu.lua:904
 msgid "3D Clouds"
-msgstr ""
+msgstr "3D pilved"
 
-#: src/guiMainMenu.cpp:629
-msgid "Opaque water"
-msgstr ""
+#: builtin/mainmenu.lua:906
+#, fuzzy
+msgid "Opaque Water"
+msgstr "Läbipaistmatu vesi"
 
-#: src/guiMainMenu.cpp:639
+#: builtin/mainmenu.lua:909
 msgid "Mip-Mapping"
-msgstr ""
+msgstr "Väga hea kvaliteet"
 
-#: src/guiMainMenu.cpp:646
+#: builtin/mainmenu.lua:911
 msgid "Anisotropic Filtering"
-msgstr ""
+msgstr "Anisotroopne Filtreerimine"
 
-#: src/guiMainMenu.cpp:653
+#: builtin/mainmenu.lua:913
 msgid "Bi-Linear Filtering"
-msgstr ""
+msgstr "Bi-lineaarsed Filtreerimine"
 
-#: src/guiMainMenu.cpp:660
+#: builtin/mainmenu.lua:915
 msgid "Tri-Linear Filtering"
-msgstr ""
+msgstr "Tri-Linear Filtreerimine"
 
-#: src/guiMainMenu.cpp:668
+#: builtin/mainmenu.lua:918
 msgid "Shaders"
-msgstr ""
+msgstr "Varjutajad"
 
-#: src/guiMainMenu.cpp:675
+#: builtin/mainmenu.lua:920
 msgid "Preload item visuals"
-msgstr ""
+msgstr "Lae asjade visuaale"
 
-#: src/guiMainMenu.cpp:682
+#: builtin/mainmenu.lua:922
 msgid "Enable Particles"
-msgstr ""
+msgstr "Lülita osakesed sisse"
 
-#: src/guiMainMenu.cpp:692
+#: builtin/mainmenu.lua:924
+#, fuzzy
+msgid "Finite Liquid"
+msgstr "Löppev vedelik"
+
+#: builtin/mainmenu.lua:927
 msgid "Change keys"
+msgstr "Vaheta nuppe"
+
+#: builtin/mainmenu.lua:940 src/keycode.cpp:248
+msgid "Play"
+msgstr "Mängi"
+
+#: builtin/mainmenu.lua:942
+msgid "SINGLE PLAYER"
 msgstr ""
 
-#: src/guiMainMenu.cpp:977
-msgid "Address required."
+#: builtin/mainmenu.lua:955
+msgid "Select texture pack:"
+msgstr "Vali graafika:"
+
+#: builtin/mainmenu.lua:956
+msgid "TEXTURE PACKS"
 msgstr ""
 
-#: src/guiMainMenu.cpp:995
-msgid "Cannot delete world: Nothing selected"
+#: builtin/mainmenu.lua:976
+msgid "No information available"
+msgstr "Informatsioon ei ole kättesaadav"
+
+#: builtin/mainmenu.lua:1005
+msgid "Core Developers"
+msgstr "Põhiline arendaja"
+
+#: builtin/mainmenu.lua:1020
+msgid "Active Contributors"
+msgstr "Co-arendaja"
+
+#: builtin/mainmenu.lua:1028
+msgid "Previous Contributors"
+msgstr "Early arendajad"
+
+#: builtin/mainmenu.lua:1069
+msgid "Singleplayer"
+msgstr "Üksikmäng"
+
+#: builtin/mainmenu.lua:1070
+msgid "Client"
 msgstr ""
 
-#: src/guiMainMenu.cpp:1010
-msgid "Files to be deleted"
+#: builtin/mainmenu.lua:1071
+msgid "Server"
 msgstr ""
 
-#: src/guiMainMenu.cpp:1026
-msgid "Cannot create world: No games found"
+#: builtin/mainmenu.lua:1072
+msgid "Settings"
+msgstr "Sätted"
+
+#: builtin/mainmenu.lua:1073
+msgid "Texture Packs"
 msgstr ""
 
-#: src/guiMainMenu.cpp:1042
-msgid "Cannot configure world: Nothing selected"
+#: builtin/mainmenu.lua:1080
+msgid "Mods"
 msgstr ""
 
-#: src/guiMainMenu.cpp:1146
-msgid "Failed to delete all world files"
+#: builtin/mainmenu.lua:1082
+msgid "Credits"
+msgstr "Tänuavaldused"
+
+#: builtin/modmgr.lua:236
+msgid "MODS"
 msgstr ""
 
-#: src/guiPasswordChange.cpp:108
-msgid "Old Password"
+#: builtin/modmgr.lua:237
+msgid "Installed Mods:"
 msgstr ""
 
-#: src/guiPasswordChange.cpp:125
-msgid "New Password"
+#: builtin/modmgr.lua:243
+msgid "Add mod:"
 msgstr ""
 
-#: src/guiPasswordChange.cpp:141
-msgid "Confirm Password"
+#: builtin/modmgr.lua:244
+msgid "Local install"
 msgstr ""
 
-#: src/guiPasswordChange.cpp:158
-msgid "Change"
+#: builtin/modmgr.lua:245
+msgid "Online mod repository"
 msgstr ""
 
-#: src/guiPasswordChange.cpp:167
-msgid "Passwords do not match!"
+#: builtin/modmgr.lua:284
+msgid "No mod description available"
 msgstr ""
 
-#: src/guiPauseMenu.cpp:118
-msgid "Continue"
+#: builtin/modmgr.lua:288
+msgid "Mod information:"
 msgstr ""
 
-#: src/guiPauseMenu.cpp:127
-msgid "Change Password"
+#: builtin/modmgr.lua:299
+msgid "Rename"
 msgstr ""
 
-#: src/guiPauseMenu.cpp:135
-msgid "Exit to Menu"
+#: builtin/modmgr.lua:301
+msgid "Uninstall selected modpack"
 msgstr ""
 
-#: src/guiPauseMenu.cpp:142
-msgid "Exit to OS"
+#: builtin/modmgr.lua:312
+msgid "Uninstall selected mod"
 msgstr ""
 
-#: src/guiPauseMenu.cpp:149
-msgid ""
-"Default Controls:\n"
-"- WASD: Walk\n"
-"- Mouse left: dig/hit\n"
-"- Mouse right: place/use\n"
-"- Mouse wheel: select item\n"
-"- 0...9: select item\n"
-"- Shift: sneak\n"
-"- R: Toggle viewing all loaded chunks\n"
-"- I: Inventory menu\n"
-"- ESC: This menu\n"
-"- T: Chat\n"
+#: builtin/modmgr.lua:324
+msgid "Rename Modpack:"
 msgstr ""
 
-#: src/keycode.cpp:223
-msgid "Left Button"
-msgstr ""
-
-#: src/keycode.cpp:223
-msgid "Middle Button"
-msgstr ""
-
-#: src/keycode.cpp:223
-msgid "Right Button"
-msgstr ""
-
-#: src/keycode.cpp:223
-msgid "X Button 1"
-msgstr ""
-
-#: src/keycode.cpp:224
-msgid "Back"
-msgstr ""
-
-#: src/keycode.cpp:224
-msgid "Clear"
-msgstr ""
-
-#: src/keycode.cpp:224
-msgid "Return"
-msgstr ""
-
-#: src/keycode.cpp:224
-msgid "Tab"
-msgstr ""
-
-#: src/keycode.cpp:224
-msgid "X Button 2"
-msgstr ""
-
-#: src/keycode.cpp:225
-msgid "Capital"
-msgstr ""
-
-#: src/keycode.cpp:225
-msgid "Control"
-msgstr ""
-
-#: src/keycode.cpp:225
-msgid "Kana"
-msgstr ""
-
-#: src/keycode.cpp:225
-msgid "Menu"
-msgstr ""
-
-#: src/keycode.cpp:225
-msgid "Pause"
-msgstr ""
-
-#: src/keycode.cpp:225
-msgid "Shift"
-msgstr ""
-
-#: src/keycode.cpp:226
-msgid "Convert"
-msgstr ""
-
-#: src/keycode.cpp:226
-msgid "Escape"
-msgstr ""
-
-#: src/keycode.cpp:226
-msgid "Final"
-msgstr ""
-
-#: src/keycode.cpp:226
-msgid "Junja"
-msgstr ""
-
-#: src/keycode.cpp:226
-msgid "Kanji"
-msgstr ""
-
-#: src/keycode.cpp:226
-msgid "Nonconvert"
-msgstr ""
-
-#: src/keycode.cpp:227
+#: builtin/modmgr.lua:329 src/keycode.cpp:227
 msgid "Accept"
+msgstr "Nõustu"
+
+#: builtin/modmgr.lua:423
+#, fuzzy
+msgid "World:"
+msgstr "Vali maailm:"
+
+#: builtin/modmgr.lua:427 builtin/modmgr.lua:429
+#, fuzzy
+msgid "Hide Game"
+msgstr "Mäng"
+
+#: builtin/modmgr.lua:433 builtin/modmgr.lua:435
+msgid "Hide mp content"
 msgstr ""
 
-#: src/keycode.cpp:227
-msgid "End"
+#: builtin/modmgr.lua:442
+msgid "Mod:"
 msgstr ""
 
-#: src/keycode.cpp:227
-msgid "Home"
+#: builtin/modmgr.lua:444
+#, fuzzy
+msgid "Depends:"
+msgstr "Vajab:"
+
+#: builtin/modmgr.lua:447 src/guiKeyChangeMenu.cpp:187
+msgid "Save"
+msgstr "Salvesta"
+
+#: builtin/modmgr.lua:464
+#, fuzzy
+msgid "Enable MP"
+msgstr "Lülita kõik sisse"
+
+#: builtin/modmgr.lua:466
+#, fuzzy
+msgid "Disable MP"
+msgstr "Lülita kõik välja"
+
+#: builtin/modmgr.lua:470 builtin/modmgr.lua:472
+msgid "enabled"
+msgstr "Sisse lülitatud"
+
+#: builtin/modmgr.lua:478
+#, fuzzy
+msgid "Enable all"
+msgstr "Lülita kõik sisse"
+
+#: builtin/modmgr.lua:577
+#, fuzzy
+msgid "Select Mod File:"
+msgstr "Vali maailm:"
+
+#: builtin/modmgr.lua:616
+msgid "Install Mod: file: \"$1\""
 msgstr ""
 
-#: src/keycode.cpp:227
-msgid "Mode Change"
+#: builtin/modmgr.lua:617
+msgid ""
+"\n"
+"Install Mod: unsupported filetype \"$1\""
 msgstr ""
 
-#: src/keycode.cpp:227
-msgid "Next"
+#: builtin/modmgr.lua:638
+#, fuzzy
+msgid "Failed to install $1 to $2"
+msgstr "Maailma initsialiseerimine ebaõnnestus"
+
+#: builtin/modmgr.lua:641
+msgid "Install Mod: unable to find suitable foldername for modpack $1"
 msgstr ""
 
-#: src/keycode.cpp:227
-msgid "Prior"
+#: builtin/modmgr.lua:661
+msgid "Install Mod: unable to find real modname for: $1"
 msgstr ""
 
-#: src/keycode.cpp:227
-msgid "Space"
+#: builtin/modmgr.lua:855
+msgid "Modmgr: failed to delete \"$1\""
 msgstr ""
 
-#: src/keycode.cpp:228
-msgid "Down"
+#: builtin/modmgr.lua:859
+msgid "Modmgr: invalid modpath \"$1\""
 msgstr ""
 
-#: src/keycode.cpp:228
-msgid "Execute"
+#: builtin/modmgr.lua:876
+msgid "Are you sure you want to delete \"$1\"?"
 msgstr ""
 
-#: src/keycode.cpp:228
-msgid "Print"
+#: builtin/modmgr.lua:878
+msgid "No of course not!"
 msgstr ""
 
-#: src/keycode.cpp:228
-msgid "Select"
+#: builtin/modstore.lua:183
+msgid "Page $1 of $2"
 msgstr ""
 
-#: src/keycode.cpp:228
-msgid "Up"
+#: builtin/modstore.lua:243
+msgid "Rating"
 msgstr ""
 
-#: src/keycode.cpp:229
-msgid "Help"
+#: builtin/modstore.lua:251
+msgid "re-Install"
 msgstr ""
 
-#: src/keycode.cpp:229
-msgid "Insert"
+#: builtin/modstore.lua:253
+msgid "Install"
 msgstr ""
 
-#: src/keycode.cpp:229
-msgid "Snapshot"
+#: src/client.cpp:2917
+msgid "Item textures..."
 msgstr ""
 
-#: src/keycode.cpp:232
-msgid "Left Windows"
+#: src/game.cpp:940
+msgid "Loading..."
 msgstr ""
 
-#: src/keycode.cpp:233
-msgid "Apps"
+#: src/game.cpp:1000
+msgid "Creating server...."
 msgstr ""
 
-#: src/keycode.cpp:233
-msgid "Numpad 0"
+#: src/game.cpp:1016
+msgid "Creating client..."
 msgstr ""
 
-#: src/keycode.cpp:233
-msgid "Numpad 1"
+#: src/game.cpp:1025
+msgid "Resolving address..."
 msgstr ""
 
-#: src/keycode.cpp:233
-msgid "Right Windows"
+#: src/game.cpp:1122
+msgid "Connecting to server..."
 msgstr ""
 
-#: src/keycode.cpp:233
-msgid "Sleep"
+#: src/game.cpp:1219
+msgid "Item definitions..."
 msgstr ""
 
-#: src/keycode.cpp:234
-msgid "Numpad 2"
+#: src/game.cpp:1226
+msgid "Node definitions..."
 msgstr ""
 
-#: src/keycode.cpp:234
-msgid "Numpad 3"
+#: src/game.cpp:1233
+msgid "Media..."
 msgstr ""
 
-#: src/keycode.cpp:234
-msgid "Numpad 4"
+#: src/game.cpp:3409
+msgid "Shutting down stuff..."
 msgstr ""
 
-#: src/keycode.cpp:234
-msgid "Numpad 5"
-msgstr ""
-
-#: src/keycode.cpp:234
-msgid "Numpad 6"
-msgstr ""
-
-#: src/keycode.cpp:234
-msgid "Numpad 7"
-msgstr ""
-
-#: src/keycode.cpp:235
-msgid "Numpad *"
-msgstr ""
-
-#: src/keycode.cpp:235
-msgid "Numpad +"
-msgstr ""
-
-#: src/keycode.cpp:235
-msgid "Numpad -"
-msgstr ""
-
-#: src/keycode.cpp:235
-msgid "Numpad /"
-msgstr ""
-
-#: src/keycode.cpp:235
-msgid "Numpad 8"
-msgstr ""
-
-#: src/keycode.cpp:235
-msgid "Numpad 9"
-msgstr ""
-
-#: src/keycode.cpp:239
-msgid "Num Lock"
-msgstr ""
-
-#: src/keycode.cpp:239
-msgid "Scroll Lock"
-msgstr ""
-
-#: src/keycode.cpp:240
-msgid "Left Shift"
-msgstr ""
-
-#: src/keycode.cpp:240
-msgid "Right Shift"
-msgstr ""
-
-#: src/keycode.cpp:241
-msgid "Left Control"
-msgstr ""
-
-#: src/keycode.cpp:241
-msgid "Left Menu"
-msgstr ""
-
-#: src/keycode.cpp:241
-msgid "Right Control"
-msgstr ""
-
-#: src/keycode.cpp:241
-msgid "Right Menu"
-msgstr ""
-
-#: src/keycode.cpp:243
-msgid "Comma"
-msgstr ""
-
-#: src/keycode.cpp:243
-msgid "Minus"
-msgstr ""
-
-#: src/keycode.cpp:243
-msgid "Period"
-msgstr ""
-
-#: src/keycode.cpp:243
-msgid "Plus"
-msgstr ""
-
-#: src/keycode.cpp:247
-msgid "Attn"
-msgstr ""
-
-#: src/keycode.cpp:247
-msgid "CrSel"
-msgstr ""
-
-#: src/keycode.cpp:248
-msgid "Erase OEF"
-msgstr ""
-
-#: src/keycode.cpp:248
-msgid "ExSel"
-msgstr ""
-
-#: src/keycode.cpp:248
-msgid "OEM Clear"
-msgstr ""
-
-#: src/keycode.cpp:248
-msgid "PA1"
-msgstr ""
-
-#: src/keycode.cpp:248
-msgid "Zoom"
-msgstr ""
-
-#: src/main.cpp:1384
-msgid "Main Menu"
-msgstr ""
-
-#: src/main.cpp:1633
-msgid "Failed to initialize world"
-msgstr ""
-
-#: src/main.cpp:1645
-msgid "No world selected and no address provided. Nothing to do."
-msgstr ""
-
-#: src/main.cpp:1653
-msgid "Could not find or load game \""
-msgstr ""
-
-#: src/main.cpp:1667
-msgid "Invalid gamespec."
-msgstr ""
-
-#: src/main.cpp:1707
-msgid "Connection error (timed out?)"
-msgstr ""
-
-#: src/main.cpp:1718
+#: src/game.cpp:3439
 msgid ""
 "\n"
 "Check debug.txt for details."
 msgstr ""
+"\n"
+"Vaata debug.txt info jaoks."
+
+#: src/guiDeathScreen.cpp:96
+msgid "You died."
+msgstr "Sa surid."
+
+#: src/guiDeathScreen.cpp:104
+msgid "Respawn"
+msgstr "Ärka ellu"
+
+#: src/guiFormSpecMenu.cpp:1656 src/guiMessageMenu.cpp:107
+#: src/guiTextInputMenu.cpp:139
+msgid "Proceed"
+msgstr "Jätka"
+
+#: src/guiKeyChangeMenu.cpp:121
+msgid "Keybindings. (If this menu screws up, remove stuff from minetest.conf)"
+msgstr ""
+"Nupusätted. (Kui see menüü sassi läheb, siis kustuta asju failist minetest."
+"conf)"
+
+#: src/guiKeyChangeMenu.cpp:161
+msgid "\"Use\" = climb down"
+msgstr "\"Tegevus\" = Roni alla"
+
+#: src/guiKeyChangeMenu.cpp:176
+msgid "Double tap \"jump\" to toggle fly"
+msgstr "Topeltklõpsa \"Hüppamist\" et sisse lülitada lendamine"
+
+#: src/guiKeyChangeMenu.cpp:288
+msgid "Key already in use"
+msgstr "Nupp juba kasutuses"
+
+#: src/guiKeyChangeMenu.cpp:363
+msgid "press key"
+msgstr "Vajuta nuppu"
+
+#: src/guiKeyChangeMenu.cpp:389
+msgid "Forward"
+msgstr "Edasi"
+
+#: src/guiKeyChangeMenu.cpp:390
+msgid "Backward"
+msgstr "Tagasi"
+
+#: src/guiKeyChangeMenu.cpp:391 src/keycode.cpp:228
+msgid "Left"
+msgstr "Vasakule"
+
+#: src/guiKeyChangeMenu.cpp:392 src/keycode.cpp:228
+msgid "Right"
+msgstr "Paremale"
+
+#: src/guiKeyChangeMenu.cpp:393
+msgid "Use"
+msgstr "Tegevus"
+
+#: src/guiKeyChangeMenu.cpp:394
+msgid "Jump"
+msgstr "Hüppamine"
+
+#: src/guiKeyChangeMenu.cpp:395
+msgid "Sneak"
+msgstr "Hiilimine"
+
+#: src/guiKeyChangeMenu.cpp:396
+msgid "Drop"
+msgstr "Viska maha"
+
+#: src/guiKeyChangeMenu.cpp:397
+msgid "Inventory"
+msgstr "Seljakott"
+
+#: src/guiKeyChangeMenu.cpp:398
+msgid "Chat"
+msgstr "Jututuba"
+
+#: src/guiKeyChangeMenu.cpp:399
+msgid "Command"
+msgstr "Käsklus"
+
+#: src/guiKeyChangeMenu.cpp:400
+msgid "Console"
+msgstr "Konsool"
+
+#: src/guiKeyChangeMenu.cpp:401
+msgid "Toggle fly"
+msgstr "Lülita lendamine sisse"
+
+#: src/guiKeyChangeMenu.cpp:402
+msgid "Toggle fast"
+msgstr "Lülita kiirus sisse"
+
+#: src/guiKeyChangeMenu.cpp:403
+msgid "Toggle noclip"
+msgstr "Lülita läbi seinte minek sisse"
+
+#: src/guiKeyChangeMenu.cpp:404
+msgid "Range select"
+msgstr "Kauguse valik"
+
+#: src/guiKeyChangeMenu.cpp:405
+msgid "Print stacks"
+msgstr "Prindi kogused"
+
+#: src/guiPasswordChange.cpp:106
+msgid "Old Password"
+msgstr "Vana parool"
+
+#: src/guiPasswordChange.cpp:122
+msgid "New Password"
+msgstr "Uus parool"
+
+#: src/guiPasswordChange.cpp:137
+msgid "Confirm Password"
+msgstr "Kinnita parooli"
+
+#: src/guiPasswordChange.cpp:153
+msgid "Change"
+msgstr "Muuda"
+
+#: src/guiPasswordChange.cpp:162
+msgid "Passwords do not match!"
+msgstr "Paroolid ei ole samad!"
+
+#: src/guiPauseMenu.cpp:122
+msgid "Continue"
+msgstr "Jätka"
+
+#: src/guiPauseMenu.cpp:133
+msgid "Change Password"
+msgstr "Vaheta parooli"
+
+#: src/guiPauseMenu.cpp:143
+msgid "Sound Volume"
+msgstr "Hääle volüüm"
+
+#: src/guiPauseMenu.cpp:152
+msgid "Exit to Menu"
+msgstr "Välju menüüsse"
+
+#: src/guiPauseMenu.cpp:161
+msgid "Exit to OS"
+msgstr "Välju mängust"
+
+#: src/guiPauseMenu.cpp:170
+msgid ""
+"Default Controls:\n"
+"- WASD: move\n"
+"- Space: jump/climb\n"
+"- Shift: sneak/go down\n"
+"- Q: drop item\n"
+"- I: inventory\n"
+"- Mouse: turn/look\n"
+"- Mouse left: dig/punch\n"
+"- Mouse right: place/use\n"
+"- Mouse wheel: select item\n"
+"- T: chat\n"
+msgstr ""
+
+#: src/guiVolumeChange.cpp:107
+msgid "Sound Volume: "
+msgstr "Hääle Volüüm: "
+
+#: src/guiVolumeChange.cpp:121
+msgid "Exit"
+msgstr "Välju"
+
+#: src/keycode.cpp:223
+msgid "Left Button"
+msgstr "Vasak nupp"
+
+#: src/keycode.cpp:223
+msgid "Middle Button"
+msgstr "Keskmine nupp"
+
+#: src/keycode.cpp:223
+msgid "Right Button"
+msgstr "Parem nupp"
+
+#: src/keycode.cpp:223
+msgid "X Button 1"
+msgstr "X Nuppp 1"
+
+#: src/keycode.cpp:224
+msgid "Back"
+msgstr "Tagasi"
+
+#: src/keycode.cpp:224
+msgid "Clear"
+msgstr "Tühjenda"
+
+#: src/keycode.cpp:224
+msgid "Return"
+msgstr "Enter"
+
+#: src/keycode.cpp:224
+msgid "Tab"
+msgstr "Reavahetus"
+
+#: src/keycode.cpp:224
+msgid "X Button 2"
+msgstr "X Nupp 2"
+
+#: src/keycode.cpp:225
+msgid "Capital"
+msgstr "Caps Lock"
+
+#: src/keycode.cpp:225
+msgid "Control"
+msgstr "CTRL"
+
+#: src/keycode.cpp:225
+msgid "Kana"
+msgstr "Kana"
+
+#: src/keycode.cpp:225
+msgid "Menu"
+msgstr "Menüü"
+
+#: src/keycode.cpp:225
+msgid "Pause"
+msgstr "Paus"
+
+#: src/keycode.cpp:225
+msgid "Shift"
+msgstr "Shift,"
+
+#: src/keycode.cpp:226
+msgid "Convert"
+msgstr "Konverteeri"
+
+#: src/keycode.cpp:226
+msgid "Escape"
+msgstr "Põgene"
+
+#: src/keycode.cpp:226
+msgid "Final"
+msgstr "Viimane"
+
+#: src/keycode.cpp:226
+msgid "Junja"
+msgstr "Junja"
+
+#: src/keycode.cpp:226
+msgid "Kanji"
+msgstr "Kanji"
+
+#: src/keycode.cpp:226
+msgid "Nonconvert"
+msgstr "Konverteerimatta"
+
+#: src/keycode.cpp:227
+msgid "End"
+msgstr "Lõpeta"
+
+#: src/keycode.cpp:227
+msgid "Home"
+msgstr "Kodu"
+
+#: src/keycode.cpp:227
+msgid "Mode Change"
+msgstr "Moodi vahetamine"
+
+#: src/keycode.cpp:227
+msgid "Next"
+msgstr "Järgmine"
+
+#: src/keycode.cpp:227
+msgid "Prior"
+msgstr "Eelnev"
+
+#: src/keycode.cpp:227
+msgid "Space"
+msgstr "Tühik"
+
+#: src/keycode.cpp:228
+msgid "Down"
+msgstr "Alla"
+
+#: src/keycode.cpp:228
+msgid "Execute"
+msgstr "Soorita"
+
+#: src/keycode.cpp:228
+msgid "Print"
+msgstr "Prindi"
+
+#: src/keycode.cpp:228
+msgid "Select"
+msgstr "Vali"
+
+#: src/keycode.cpp:228
+msgid "Up"
+msgstr "Üles"
+
+#: src/keycode.cpp:229
+msgid "Help"
+msgstr "Abi"
+
+#: src/keycode.cpp:229
+msgid "Insert"
+msgstr "Sisesta"
+
+#: src/keycode.cpp:229
+msgid "Snapshot"
+msgstr "Mängupilt"
+
+#: src/keycode.cpp:232
+msgid "Left Windows"
+msgstr "Vasak Windowsi nupp"
+
+#: src/keycode.cpp:233
+msgid "Apps"
+msgstr "Aplikatsioonid"
+
+#: src/keycode.cpp:233
+msgid "Numpad 0"
+msgstr "Numbrilaual 0"
+
+#: src/keycode.cpp:233
+msgid "Numpad 1"
+msgstr "Numbrilaual 1"
+
+#: src/keycode.cpp:233
+msgid "Right Windows"
+msgstr "Parem Windowsi nupp"
+
+#: src/keycode.cpp:233
+msgid "Sleep"
+msgstr "Maga"
+
+#: src/keycode.cpp:234
+msgid "Numpad 2"
+msgstr "Numbrilaual 2"
+
+#: src/keycode.cpp:234
+msgid "Numpad 3"
+msgstr "Numbrilaual 3"
+
+#: src/keycode.cpp:234
+msgid "Numpad 4"
+msgstr "Numbrilaual 4"
+
+#: src/keycode.cpp:234
+msgid "Numpad 5"
+msgstr "Numbrilaual 5"
+
+#: src/keycode.cpp:234
+msgid "Numpad 6"
+msgstr "Numbrilaual 6"
+
+#: src/keycode.cpp:234
+msgid "Numpad 7"
+msgstr "Numbrilaual 7"
+
+#: src/keycode.cpp:235
+msgid "Numpad *"
+msgstr "Numbrilaual *"
+
+#: src/keycode.cpp:235
+msgid "Numpad +"
+msgstr "Numbrilaual +"
+
+#: src/keycode.cpp:235
+msgid "Numpad -"
+msgstr "Numbrilaual -"
+
+#: src/keycode.cpp:235
+msgid "Numpad /"
+msgstr "Numbrilaual /"
+
+#: src/keycode.cpp:235
+msgid "Numpad 8"
+msgstr "Numbrilaual 8"
+
+#: src/keycode.cpp:235
+msgid "Numpad 9"
+msgstr "Numbrilaual 9"
+
+#: src/keycode.cpp:239
+msgid "Num Lock"
+msgstr "Numbrilaual Num Lock"
+
+#: src/keycode.cpp:239
+msgid "Scroll Lock"
+msgstr "Scroll lukk"
+
+#: src/keycode.cpp:240
+msgid "Left Shift"
+msgstr "Vasak Shift"
+
+#: src/keycode.cpp:240
+msgid "Right Shift"
+msgstr "Parem Shift"
+
+#: src/keycode.cpp:241
+msgid "Left Control"
+msgstr "Vasak CTRL"
+
+#: src/keycode.cpp:241
+msgid "Left Menu"
+msgstr "Vasak Menüü"
+
+#: src/keycode.cpp:241
+msgid "Right Control"
+msgstr "Parem CTRL"
+
+#: src/keycode.cpp:241
+msgid "Right Menu"
+msgstr "Parem Menüü"
+
+#: src/keycode.cpp:243
+msgid "Comma"
+msgstr "Koma"
+
+#: src/keycode.cpp:243
+msgid "Minus"
+msgstr "Miinus"
+
+#: src/keycode.cpp:243
+msgid "Period"
+msgstr "Punkt"
+
+#: src/keycode.cpp:243
+msgid "Plus"
+msgstr "Pluss"
+
+#: src/keycode.cpp:247
+msgid "Attn"
+msgstr "Attn"
+
+#: src/keycode.cpp:247
+msgid "CrSel"
+msgstr "CrSel"
+
+#: src/keycode.cpp:248
+msgid "Erase OEF"
+msgstr "Kustuta OEF"
+
+#: src/keycode.cpp:248
+msgid "ExSel"
+msgstr "ExSel"
+
+#: src/keycode.cpp:248
+msgid "OEM Clear"
+msgstr "OEM Tühi"
+
+#: src/keycode.cpp:248
+msgid "PA1"
+msgstr "PA1"
+
+#: src/keycode.cpp:248
+msgid "Zoom"
+msgstr "Suumi"
+
+#: src/main.cpp:1472
+msgid "needs_fallback_font"
+msgstr ""
+
+#: src/main.cpp:1547
+msgid "Main Menu"
+msgstr "Menüü"
+
+#: src/main.cpp:1723
+msgid "No world selected and no address provided. Nothing to do."
+msgstr "Pole valitud ei maailma ega IP aadressi. Pole midagi teha."
+
+#: src/main.cpp:1731
+msgid "Could not find or load game \""
+msgstr "Ei leia ega suuda jätkata mängu \""
+
+#: src/main.cpp:1745
+msgid "Invalid gamespec."
+msgstr "Vale mängu ID."
+
+#: src/main.cpp:1790
+msgid "Connection error (timed out?)"
+msgstr "Ühenduse viga (Aeg otsas?)"
+
+#~ msgid ""
+#~ "Warning: Some mods are not configured yet.\n"
+#~ "They will be enabled by default when you save the configuration.  "
+#~ msgstr ""
+#~ "Hoiatus: Mõned modifikatsioonid pole sätitud veel.\n"
+#~ "Need lülitatakse sisse kohe pärast sätete salvestamist."
+
+#~ msgid ""
+#~ "Warning: Some configured mods are missing.\n"
+#~ "Their setting will be removed when you save the configuration.  "
+#~ msgstr ""
+#~ "Hoiatus: Mõned konfigureeritud modifikatsioonid on kaotsi läinud.\n"
+#~ "Nende sätted kustutatakse kui salvestada konfiguratsioon."
+
+#~ msgid ""
+#~ "Default Controls:\n"
+#~ "- WASD: Walk\n"
+#~ "- Mouse left: dig/hit\n"
+#~ "- Mouse right: place/use\n"
+#~ "- Mouse wheel: select item\n"
+#~ "- 0...9: select item\n"
+#~ "- Shift: sneak\n"
+#~ "- R: Toggle viewing all loaded chunks\n"
+#~ "- I: Inventory menu\n"
+#~ "- ESC: This menu\n"
+#~ "- T: Chat\n"
+#~ msgstr ""
+#~ "Algsed nupusätted:\n"
+#~ "- WASD: Kõnni\n"
+#~ "- Vasak hiireklõps: Kaeva/löö\n"
+#~ "- Parem hiireklõps: Aseta/kasuta\n"
+#~ "- Hiireratas: Vali asi\n"
+#~ "- 0...9: Vali asi\n"
+#~ "- Shift: Hiili\n"
+#~ "- R: Vaheta nägemiskaugust\n"
+#~ "- I: Seljakott\n"
+#~ "- ESC: Menüü\n"
+#~ "- T: Jututupa\n"
+
+#~ msgid "Failed to delete all world files"
+#~ msgstr "Kõigi maailma failide kustutamine ebaõnnestus"
+
+#~ msgid "Cannot configure world: Nothing selected"
+#~ msgstr "Maailma konfigureerimine ebaõnnestus: Pole midagi valitud"
+
+#~ msgid "Cannot create world: No games found"
+#~ msgstr "Maailma loomine ebaõnnestus: Mängu ei leitud"
+
+#~ msgid "Files to be deleted"
+#~ msgstr "Failid mida kustutada"
+
+#~ msgid "Cannot delete world: Nothing selected"
+#~ msgstr "Maailma kustutamine ebaõnnestus: Maailma pole valitud"
+
+#~ msgid "Address required."
+#~ msgstr "IP on vajalkik."
+
+#~ msgid "Create world"
+#~ msgstr "Loo maailm"
+
+#~ msgid "Leave address blank to start a local server."
+#~ msgstr "Jäta IP lahter tühjaks et alustada LAN serverit."
+
+#~ msgid "Show Favorites"
+#~ msgstr "Näita lemmikuid"
+
+#~ msgid "Show Public"
+#~ msgstr "Näita avalikke"
+
+#~ msgid "Advanced"
+#~ msgstr "Arenenud sätted"
+
+#~ msgid "Multiplayer"
+#~ msgstr "Mitmikmäng"
+
+#~ msgid "Cannot create world: Name contains invalid characters"
+#~ msgstr "Maailma loomine ebaõnnestus: Nimes esineb keelatud tähti"
+
+#~ msgid "Warning: Configuration not consistent.  "
+#~ msgstr "Hoiatus: Konfiguratsioon pole kindel."
+
+#~ msgid "Configuration saved.  "
+#~ msgstr "Konfiguratsioon salvestatud. "
+
+#~ msgid "is required by:"
+#~ msgstr "Seda vajavad:"
+
+#~ msgid "Left click: Move all items, Right click: Move single item"
+#~ msgstr ""
+#~ "Vasak hiireklõps: Liiguta kõiki asju, Parem hiireklõps: Liiguta üksikut "
+#~ "asja"
+
+#, fuzzy
+#~ msgid "Download"
+#~ msgstr "Alla"

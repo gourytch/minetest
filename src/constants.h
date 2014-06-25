@@ -32,10 +32,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     Connection
 */
 
+#define PEER_ID_INEXISTENT 0
+#define PEER_ID_SERVER 1
+
 // Define for simulating the quirks of sending through internet.
 // Causes the socket class to deliberately drop random packets.
 // This disables unit testing of socket and connection.
 #define INTERNET_SIMULATOR 0
+#define INTERNET_SIMULATOR_PACKET_LOSS 10 // 10 = easy, 4 = hard
 
 #define CONNECTION_TIMEOUT 30
 
@@ -82,14 +86,22 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 // Size of player's main inventory
 #define PLAYER_INVENTORY_SIZE (8*4)
 
-/*
-	This is good to be a bit different than 0 so that water level is not
-    between two MapBlocks
-*/
-#define WATER_LEVEL 1
-
 // Maximum hit points of a player
 #define PLAYER_MAX_HP 20
+
+// Number of different files to try to save a player to if the first fails
+// (because of a case-insensitive filesystem)
+// TODO: Use case-insensitive player names instead of this hack.
+#define PLAYER_FILE_ALTERNATE_TRIES 1000
+
+/*
+ *    GUI related things
+ */
+#define LEGACY_SCALING                                     (2./3.)
+#define DEFAULT_FONT_SIZE                  (13.0 / LEGACY_SCALING)
+#define DEFAULT_IMGSIZE                                     (48.0)
+#define DEFAULT_XSPACING                    ((15.0 + (1.0 / 3.0)))
+#define DEFAULT_YSPACING                                     (9.0)
 
 #endif
 

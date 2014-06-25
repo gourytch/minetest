@@ -20,14 +20,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #ifndef UTIL_SERIALIZE_HEADER
 #define UTIL_SERIALIZE_HEADER
 
-#include "../irrlichttypes.h"
 #include "../irrlichttypes_bloated.h"
-#include "../irr_v2d.h"
-#include "../irr_v3d.h"
 #include <iostream>
 #include <string>
-#include "../exceptions.h"
-#include "pointer.h"
 
 inline void writeU64(u8 *data, u64 i)
 {
@@ -171,14 +166,14 @@ inline v2s16 readV2S16(const u8 *data)
 inline void writeV2S32(u8 *data, v2s32 p)
 {
 	writeS32(&data[0], p.X);
-	writeS32(&data[2], p.Y);
+	writeS32(&data[4], p.Y);
 }
 
 inline v2s32 readV2S32(const u8 *data)
 {
 	v2s32 p;
 	p.X = readS32(&data[0]);
-	p.Y = readS32(&data[2]);
+	p.Y = readS32(&data[4]);
 	return p;
 }
 
@@ -351,6 +346,19 @@ inline v2s16 readV2S16(std::istream &is)
 	return readV2S16((u8*)buf);
 }
 
+inline void writeV2S32(std::ostream &os, v2s32 p)
+{
+	char buf[8] = {0};
+	writeV2S32((u8*)buf, p);
+	os.write(buf, 8);
+}
+inline v2s32 readV2S32(std::istream &is)
+{
+	char buf[8] = {0};
+	is.read(buf, 8);
+	return readV2S32((u8*)buf);
+}
+
 inline void writeV3S16(std::ostream &os, v3s16 p)
 {
 	char buf[6] = {0};
@@ -383,110 +391,38 @@ inline video::SColor readARGB8(std::istream &is)
 */
 
 // Creates a string with the length as the first two bytes
-inline std::string serializeString(const std::string &plain)
-{
-	//assert(plain.size() <= 65535);
-	if(plain.size() > 65535)
-		throw SerializationError("String too long for serializeString");
-	char buf[2];
-	writeU16((u8*)&buf[0], plain.size());
-	std::string s;
-	s.append(buf, 2);
-	s.append(plain);
-	return s;
-}
+std::string serializeString(const std::string &plain);
 
 // Creates a string with the length as the first two bytes from wide string
-inline std::string serializeWideString(const std::wstring &plain)
-{
-	//assert(plain.size() <= 65535);
-	if(plain.size() > 65535)
-		throw SerializationError("String too long for serializeString");
-	char buf[2];
-	writeU16((u8*)buf, plain.size());
-	std::string s;
-	s.append(buf, 2);
-	for(u32 i=0; i<plain.size(); i++)
-	{
-		writeU16((u8*)buf, plain[i]);
-		s.append(buf, 2);
-	}
-	return s;
-}
+std::string serializeWideString(const std::wstring &plain);
 
 // Reads a string with the length as the first two bytes
-inline std::string deSerializeString(std::istream &is)
-{
-	char buf[2];
-	is.read(buf, 2);
-	if(is.gcount() != 2)
-		throw SerializationError("deSerializeString: size not read");
-	u16 s_size = readU16((u8*)buf);
-	if(s_size == 0)
-		return "";
-	Buffer<char> buf2(s_size);
-	is.read(&buf2[0], s_size);
-	std::string s;
-	s.reserve(s_size);
-	s.append(&buf2[0], s_size);
-	return s;
-}
+std::string deSerializeString(std::istream &is);
 
 // Reads a wide string with the length as the first two bytes
-inline std::wstring deSerializeWideString(std::istream &is)
-{
-	char buf[2];
-	is.read(buf, 2);
-	if(is.gcount() != 2)
-		throw SerializationError("deSerializeString: size not read");
-	u16 s_size = readU16((u8*)buf);
-	if(s_size == 0)
-		return L"";
-	std::wstring s;
-	s.reserve(s_size);
-	for(u32 i=0; i<s_size; i++)
-	{
-		is.read(&buf[0], 2);
-		wchar_t c16 = readU16((u8*)buf);
-		s.append(&c16, 1);
-	}
-	return s;
-}
+std::wstring deSerializeWideString(std::istream &is);
 
 // Creates a string with the length as the first four bytes
-inline std::string serializeLongString(const std::string &plain)
-{
-	char buf[4];
-	writeU32((u8*)&buf[0], plain.size());
-	std::string s;
-	s.append(buf, 4);
-	s.append(plain);
-	return s;
-}
+std::string serializeLongString(const std::string &plain);
 
 // Reads a string with the length as the first four bytes
-inline std::string deSerializeLongString(std::istream &is)
-{
-	char buf[4];
-	is.read(buf, 4);
-	if(is.gcount() != 4)
-		throw SerializationError("deSerializeLongString: size not read");
-	u32 s_size = readU32((u8*)buf);
-	if(s_size == 0)
-		return "";
-	Buffer<char> buf2(s_size);
-	is.read(&buf2[0], s_size);
-	std::string s;
-	s.reserve(s_size);
-	s.append(&buf2[0], s_size);
-	return s;
-}
+std::string deSerializeLongString(std::istream &is);
 
 // Creates a string encoded in JSON format (almost equivalent to a C string literal)
 std::string serializeJsonString(const std::string &plain);
 
 // Reads a string encoded in JSON format
 std::string deSerializeJsonString(std::istream &is);
+
+// Creates a string containing comma delimited values of a struct whose layout is
+// described by the parameter format
+bool serializeStructToString(std::string *out,
+	std::string format, void *value);
+
+// Reads a comma delimited string of values into a struct whose layout is
+// decribed by the parameter format
+bool deSerializeStringToStruct(std::string valstr,
+	std::string format, void *out, size_t olen);
 
 #endif
 

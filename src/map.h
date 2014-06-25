@@ -20,25 +20,21 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #ifndef MAP_HEADER
 #define MAP_HEADER
 
-#include <jmutex.h>
-#include <jmutexautolock.h>
-#include <jthread.h>
 #include <iostream>
 #include <sstream>
+#include <set>
+#include <map>
+#include <list>
 
 #include "irrlichttypes_bloated.h"
 #include "mapnode.h"
 #include "constants.h"
 #include "voxel.h"
-#include "mapgen.h" //for BlockMakeData and EmergeManager
 #include "modifiedstate.h"
 #include "util/container.h"
 #include "nodetimer.h"
 
-extern "C" {
-	#include "sqlite3.h"
-}
-
+class Database;
 class ClientMap;
 class MapSector;
 class ServerMapSector;
@@ -47,7 +43,9 @@ class NodeMetadata;
 class IGameDef;
 class IRollbackReportSink;
 class EmergeManager;
-class BlockMakeData;
+class ServerEnvironment;
+struct BlockMakeData;
+struct MapgenParams;
 
 
 /*
@@ -63,6 +61,8 @@ enum MapEditEventType{
 	MEET_ADDNODE,
 	// Node removed (changed to air)
 	MEET_REMOVENODE,
+	// Node swapped (changed without metadata change)
+	MEET_SWAPNODE,
 	// Node metadata of block changed (not knowing which node exactly)
 	// p stores block coordinate
 	MEET_BLOCK_NODE_METADATA_CHANGED,
@@ -75,7 +75,7 @@ struct MapEditEvent
 	MapEditEventType type;
 	v3s16 p;
 	MapNode n;
-	core::map<v3s16, bool> modified_blocks;
+	std::set<v3s16> modified_blocks;
 	u16 already_known_by_peer;
 
 	MapEditEvent():
@@ -90,14 +90,7 @@ struct MapEditEvent
 		event->type = type;
 		event->p = p;
 		event->n = n;
-		for(core::map<v3s16, bool>::Iterator
-				i = modified_blocks.getIterator();
-				i.atEnd()==false; i++)
-		{
-			v3s16 p = i.getNode()->getKey();
-			bool v = i.getNode()->getValue();
-			event->modified_blocks.insert(p, v);
-		}
+		event->modified_blocks = modified_blocks;
 		return event;
 	}
 
@@ -108,6 +101,8 @@ struct MapEditEvent
 			return VoxelArea(p);
 		case MEET_REMOVENODE:
 			return VoxelArea(p);
+		case MEET_SWAPNODE:
+			return VoxelArea(p);
 		case MEET_BLOCK_NODE_METADATA_CHANGED:
 		{
 			v3s16 np1 = p*MAP_BLOCKSIZE;
@@ -117,11 +112,11 @@ struct MapEditEvent
 		case MEET_OTHER:
 		{
 			VoxelArea a;
-			for(core::map<v3s16, bool>::Iterator
-					i = modified_blocks.getIterator();
-					i.atEnd()==false; i++)
+			for(std::set<v3s16>::iterator
+					i = modified_blocks.begin();
+					i != modified_blocks.end(); ++i)
 			{
-				v3s16 p = i.getNode()->getKey();
+				v3s16 p = *i;
 				v3s16 np1 = p*MAP_BLOCKSIZE;
 				v3s16 np2 = np1 + v3s16(1,1,1)*MAP_BLOCKSIZE - v3s16(1,1,1);
 				a.addPoint(np1);
@@ -186,7 +181,7 @@ public:
 	*/
 	virtual MapSector * emergeSector(v2s16 p){ return NULL; }
 	virtual MapSector * emergeSector(v2s16 p,
-			core::map<v3s16, MapBlock*> &changed_blocks){ return NULL; }
+			std::map<v3s16, MapBlock*> &changed_blocks){ return NULL; }
 
 	// Returns InvalidPositionException if not found
 	MapBlock * getBlockNoCreate(v3s16 p);
@@ -212,49 +207,50 @@ public:
 	MapNode getNodeNoEx(v3s16 p);
 
 	void unspreadLight(enum LightBank bank,
-			core::map<v3s16, u8> & from_nodes,
-			core::map<v3s16, bool> & light_sources,
-			core::map<v3s16, MapBlock*> & modified_blocks);
+			std::map<v3s16, u8> & from_nodes,
+			std::set<v3s16> & light_sources,
+			std::map<v3s16, MapBlock*> & modified_blocks);
 
 	void unLightNeighbors(enum LightBank bank,
 			v3s16 pos, u8 lightwas,
-			core::map<v3s16, bool> & light_sources,
-			core::map<v3s16, MapBlock*> & modified_blocks);
+			std::set<v3s16> & light_sources,
+			std::map<v3s16, MapBlock*> & modified_blocks);
 
 	void spreadLight(enum LightBank bank,
-			core::map<v3s16, bool> & from_nodes,
-			core::map<v3s16, MapBlock*> & modified_blocks);
+			std::set<v3s16> & from_nodes,
+			std::map<v3s16, MapBlock*> & modified_blocks);
 
 	void lightNeighbors(enum LightBank bank,
 			v3s16 pos,
-			core::map<v3s16, MapBlock*> & modified_blocks);
+			std::map<v3s16, MapBlock*> & modified_blocks);
 
 	v3s16 getBrightestNeighbour(enum LightBank bank, v3s16 p);
 
 	s16 propagateSunlight(v3s16 start,
-			core::map<v3s16, MapBlock*> & modified_blocks);
+			std::map<v3s16, MapBlock*> & modified_blocks);
 
 	void updateLighting(enum LightBank bank,
-			core::map<v3s16, MapBlock*>  & a_blocks,
-			core::map<v3s16, MapBlock*> & modified_blocks);
+			std::map<v3s16, MapBlock*>  & a_blocks,
+			std::map<v3s16, MapBlock*> & modified_blocks);
 
-	void updateLighting(core::map<v3s16, MapBlock*>  & a_blocks,
-			core::map<v3s16, MapBlock*> & modified_blocks);
+	void updateLighting(std::map<v3s16, MapBlock*>  & a_blocks,
+			std::map<v3s16, MapBlock*> & modified_blocks);
 
 	/*
 		These handle lighting but not faces.
 	*/
 	void addNodeAndUpdate(v3s16 p, MapNode n,
-			core::map<v3s16, MapBlock*> &modified_blocks);
+			std::map<v3s16, MapBlock*> &modified_blocks,
+			bool remove_metadata = true);
 	void removeNodeAndUpdate(v3s16 p,
-			core::map<v3s16, MapBlock*> &modified_blocks);
+			std::map<v3s16, MapBlock*> &modified_blocks);
 
 	/*
 		Wrappers for the latter ones.
 		These emit events.
 		Return true if succeeded, false if not.
 	*/
-	bool addNodeWithEvent(v3s16 p, MapNode n);
+	bool addNodeWithEvent(v3s16 p, MapNode n, bool remove_metadata = true);
 	bool removeNodeWithEvent(v3s16 p);
 
 	/*
@@ -281,12 +277,18 @@ public:
 		Saves modified blocks before unloading on MAPTYPE_SERVER.
 	*/
 	void timerUpdate(float dtime, float unload_timeout,
-			core::list<v3s16> *unloaded_blocks=NULL);
+			std::list<v3s16> *unloaded_blocks=NULL);
+
+	/*
+		Unloads all blocks with a zero refCount().
+		Saves modified blocks before unloading on MAPTYPE_SERVER.
+	*/
+	void unloadUnreferencedBlocks(std::list<v3s16> *unloaded_blocks=NULL);
 
 	// Deletes sectors and their blocks from memory
 	// Takes cache into account
 	// If deleted sector is in sector cache, clears cache
-	void deleteSectors(core::list<v2s16> &list);
+	void deleteSectors(std::list<v2s16> &list);
 
 #if 0
 	/*
@@ -301,8 +303,7 @@ public:
 	// For debug printing. Prints "Map: ", "ServerMap: " or "ClientMap: "
 	virtual void PrintInfo(std::ostream &out);
 
-	void transformLiquids(core::map<v3s16, MapBlock*> & modified_blocks);
-	void transformLiquidsFinite(core::map<v3s16, MapBlock*> & modified_blocks);
+	void transformLiquids(std::map<v3s16, MapBlock*> & modified_blocks);
 
 	/*
 		Node metadata
@@ -310,7 +311,22 @@ public:
 	*/
 
 	NodeMetadata* getNodeMetadata(v3s16 p);
-	void setNodeMetadata(v3s16 p, NodeMetadata *meta);
+
+	/**
+	 * Sets metadata for a node.
+	 * This method sets the metadata for a given node.
+	 * On success, it returns @c true and the object pointed to
+	 * by @p meta is then managed by the system and should
+	 * not be deleted by the caller.
+	 *
+	 * In case of failure, the method returns @c false and the
+	 * caller is still responsible for deleting the object!
+	 *
+	 * @param p node coordinates
+	 * @param meta pointer to @c NodeMetadata object
+	 * @return @c true on success, false on failure
+	 */
+	bool setNodeMetadata(v3s16 p, NodeMetadata *meta);
 	void removeNodeMetadata(v3s16 p);
 
 	/*
@@ -325,7 +341,7 @@ public:
 	/*
 		Misc.
 	*/
-	core::map<v2s16, MapSector*> *getSectorsPtr(){return &m_sectors;}
+	std::map<v2s16, MapSector*> *getSectorsPtr(){return &m_sectors;}
 
 	/*
 		Variables
@@ -335,14 +351,15 @@ public:
 	s32 transforming_liquid_size();
 
 protected:
+	friend class LuaVoxelManip;
 
 	std::ostream &m_dout; // A bit deprecated, could be removed
 
 	IGameDef *m_gamedef;
 
-	core::map<MapEventReceiver*, bool> m_event_receivers;
+	std::set<MapEventReceiver*> m_event_receivers;
 
-	core::map<v2s16, MapSector*> m_sectors;
+	std::map<v2s16, MapSector*> m_sectors;
 
 	// Be sure to set this to NULL when the cached sector is deleted
 	MapSector *m_sector_cache;
@@ -384,14 +401,8 @@ public:
 		Blocks are generated by using these and makeBlock().
 	*/
 	bool initBlockMake(BlockMakeData *data, v3s16 blockpos);
-	MapBlock *finishBlockMake(BlockMakeData *data,
-			core::map<v3s16, MapBlock*> &changed_blocks);
-
-	// A non-threaded wrapper to the above  - DEFUNCT
-/*	MapBlock * generateBlock(
-			v3s16 p,
-			core::map<v3s16, MapBlock*> &modified_blocks
-	);*/
+	void finishBlockMake(BlockMakeData *data,
+			std::map<v3s16, MapBlock*> &changed_blocks);
 
 	/*
 		Get a block from somewhere.
@@ -408,6 +419,17 @@ public:
 
 	*/
 	MapBlock * emergeBlock(v3s16 p, bool create_blank=true);
+
+	/*
+		Try to get a block.
+		If it does not exist in memory, add it to the emerge queue.
+		- Memory
+		- Emerge Queue (deferred disk or generate)
+	*/
+	MapBlock *getBlockOrEmerge(v3s16 p3d);
+
+	// Carries out any initialization necessary before block is sent
+	void prepareBlock(MapBlock *block);
 
 	// Helper for placing objects on ground level
 	s16 findGroundLevel(v2s16 p2d);
@@ -427,13 +449,8 @@ public:
 	/*
 		Database functions
 	*/
-	// Create the database structure
-	void createDatabase();
 	// Verify we can read/write to the database
 	void verifyDatabase();
-	// Get an integer suitable for a block
-	static sqlite3_int64 getBlockAsInteger(const v3s16 pos);
-	static v3s16 getIntegerAsBlock(sqlite3_int64 i);
 
 	// Returns true if the database file does not exist
 	bool loadFromFolders();
@@ -443,10 +460,8 @@ public:
 	void endSave();
 
 	void save(ModifiedState save_level);
-	//void loadAll();
-
-	void listAllLoadableBlocks(core::list<v3s16> &dst);
-
+	void listAllLoadableBlocks(std::list<v3s16> &dst);
+	void listAllLoadedBlocks(std::list<v3s16> &dst);
 	// Saves map seed and possibly other stuff
 	void saveMapMeta();
 	void loadMapMeta();
@@ -482,16 +497,10 @@ public:
 
 	bool isSavingEnabled(){ return m_map_saving_enabled; }
 
-	u64 getSeed(){ return m_seed; }
+	u64 getSeed();
+	s16 getWaterLevel();
 
-	MapgenParams *getMapgenParams(){ return m_mgparams; }
-
-	// Parameters fed to the Mapgen
-	MapgenParams *m_mgparams;
 private:
-	// Seed used for all kinds of randomness in generation
-	u64 m_seed;
-	
 	// Emerge manager
 	EmergeManager *m_emerge;
 
@@ -511,24 +520,18 @@ private:
 		This is reset to false when written on disk.
 	*/
 	bool m_map_metadata_changed;
-
-	/*
-		SQLite database and statements
-	*/
-	sqlite3 *m_database;
-	sqlite3_stmt *m_database_read;
-	sqlite3_stmt *m_database_write;
-	sqlite3_stmt *m_database_list;
+	Database *dbase;
 };
+
 
 #define VMANIP_BLOCK_DATA_INEXIST     1
 #define VMANIP_BLOCK_CONTAINS_CIGNORE 2
 
-class MapVoxelManipulator : public VoxelManipulator
+class ManualMapVoxelManipulator : public VoxelManipulator
 {
 public:
-	MapVoxelManipulator(Map *map);
-	virtual ~MapVoxelManipulator();
+	ManualMapVoxelManipulator(Map *map);
+	virtual ~ManualMapVoxelManipulator();
 
 	virtual void clear()
 	{
@@ -536,37 +539,23 @@ public:
 		m_loaded_blocks.clear();
 	}
 
-	virtual void emerge(VoxelArea a, s32 caller_id=-1);
+	void setMap(Map *map)
+	{m_map = map;}
 
-	void blitBack(core::map<v3s16, MapBlock*> & modified_blocks);
-	
+	void initialEmerge(v3s16 blockpos_min, v3s16 blockpos_max,
+						bool load_if_inexistent = true);
+
+	// This is much faster with big chunks of generated data
+	void blitBackAll(std::map<v3s16, MapBlock*> * modified_blocks);
+
+protected:
+	bool m_create_area;
+	Map *m_map;
 	/*
 		key = blockpos
 		value = flags describing the block
 	*/
-	core::map<v3s16, u8> m_loaded_blocks;
-protected:
-	Map *m_map;
-};
-
-class ManualMapVoxelManipulator : public MapVoxelManipulator
-{
-public:
-	ManualMapVoxelManipulator(Map *map);
-	virtual ~ManualMapVoxelManipulator();
-
-	void setMap(Map *map)
-	{m_map = map;}
-
-	virtual void emerge(VoxelArea a, s32 caller_id=-1);
-
-	void initialEmerge(v3s16 blockpos_min, v3s16 blockpos_max);
-
-	// This is much faster with big chunks of generated data
-	void blitBackAll(core::map<v3s16, MapBlock*> * modified_blocks);
-
-protected:
-	bool m_create_area;
+	std::map<v3s16, u8> m_loaded_blocks;
 };
 
 #endif
