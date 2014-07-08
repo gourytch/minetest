@@ -100,6 +100,7 @@ Player::Player(IGameDef *gamedef):
 
 Player::~Player()
 {
+	clearHud();
 }
 
 // Horizontal acceleration (X and Z), Y direction is ignored
@@ -314,6 +315,7 @@ void RemotePlayer::save(std::string savedir)
 			return;
 		}
 		testplayer.deSerialize(is, path);
+		is.close();
 		if (strcmp(testplayer.getName(), m_name) == 0) {
 			// Open file and serialize
 			std::ostringstream ss(std::ios_base::binary);
