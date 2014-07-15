@@ -244,6 +244,16 @@ public:
 		m_allowclose = value;
 	}
 
+	bool isCloseAllowed() const
+	{
+		return m_allowclose;
+	}
+
+	std::string getFormName() const
+	{
+		return m_text_dst ? m_text_dst->m_formname : std::string();
+	}
+
 	void lockSize(bool lock,v2u32 basescreensize=v2u32(0,0)) {
 		m_lock = lock;
 		m_lockscreensize = basescreensize;
@@ -306,7 +316,7 @@ protected:
 	std::vector<std::pair<FieldSpec,GUITable*> > m_tables;
 	std::vector<std::pair<FieldSpec,gui::IGUICheckBox*> > m_checkboxes;
 	std::map<std::wstring, TooltipSpec> m_tooltips;
-	
+
 	ItemSpec *m_selected_item;
 	u32 m_selected_amount;
 	bool m_selected_dragging;

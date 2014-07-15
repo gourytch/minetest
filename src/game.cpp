@@ -934,9 +934,13 @@ static inline void create_formspec_menu(GUIFormSpecMenu** cur_formspec,
 		IFormSource* fs_src, TextDest* txt_dest
 		) {
 	std::string formspec = fs_src ? fs_src->getForm() : std::string();
+	std::string formname = txt_dest ? txt_dest->m_formname : std::string();
 	if (formspec.empty() || (formspec == FORMSPEC_VERSION_STRING)) {
 		// no|empty formspec: close active form
-		if (*cur_formspec) {
+		if ((*cur_formspec != NULL)
+		&& (*cur_formspec)->isCloseAllowed()
+		&& (formname.empty()
+		|| ((*cur_formspec)->getFormName() == formname))) {
 			(*cur_formspec)->acceptInput(quit_mode_cancel);
 			(*cur_formspec)->quitMenu();
 		}
@@ -951,8 +955,17 @@ static inline void create_formspec_menu(GUIFormSpecMenu** cur_formspec,
 		(*cur_formspec)->drop();
 	}
 	else {
-		(*cur_formspec)->setFormSource(fs_src);
-		(*cur_formspec)->setTextDest(txt_dest);
+		std::string prev_formname = (*cur_formspec)->getFormName();
+		if ((*cur_formspec)->isCloseAllowed()) {
+			if (!formname.empty() && (prev_formname != formname)) {
+				(*cur_formspec)->acceptInput(quit_mode_cancel);
+			}
+			(*cur_formspec)->setFormSource(fs_src);
+			(*cur_formspec)->setTextDest(txt_dest);
+		} else {
+			if (fs_src) delete fs_src;
+			if (txt_dest) delete txt_dest;
+		}
 	}
 }
 
