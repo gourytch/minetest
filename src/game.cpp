@@ -933,7 +933,17 @@ static inline void create_formspec_menu(GUIFormSpecMenu** cur_formspec,
 		IWritableTextureSource* tsrc, IrrlichtDevice * device,
 		IFormSource* fs_src, TextDest* txt_dest
 		) {
-
+	std::string formspec = fs_src ? fs_src->getForm() : std::string();
+	if (formspec.empty() || (formspec == FORMSPEC_VERSION_STRING)) {
+		// no|empty formspec: close active form
+		if (*cur_formspec) {
+			(*cur_formspec)->acceptInput(quit_mode_cancel);
+			(*cur_formspec)->quitMenu();
+		}
+		if (fs_src) delete fs_src;
+		if (txt_dest) delete txt_dest;
+		return;
+	}
 	if (*cur_formspec == 0) {
 		*cur_formspec = new GUIFormSpecMenu(device, guiroot, -1, &g_menumgr,
 				invmgr, gamedef, tsrc, fs_src, txt_dest, cur_formspec );
